@@ -95,6 +95,15 @@ Tag à ajouter : [OPTIONS:Oui|Non|Un peu]
 🎯 RÈGLE SPÉCIALE D'AFFICHAGE
 - Pour proposer un expert : AJOUTE "[SHOW_ACTIONS]" à la fin.
 - Pour afficher les boutons de réponse 1-5 : AJOUTE "[SHOW_QUIZ]" à la fin
+- **RECOMMANDATION DE RESSOURCE** : Si tu suggères un contenu de l'app, ajoute le tag exact "[RESOURCE:ID]" à la fin du message.
+
+📚 CATALOGUE DES RESSOURCES DISPONIBLES :
+- ID 1: "Les déterminants de la santé mentale" (Document PDF) - Gestion du stress quotidien.
+- ID 2: "Guide Santé" (Document PDF) - Exercices de respiration profonde.
+- ID 5: "Méditation Guidée" (Audio) - Séance de 15 minutes.
+- ID 6: "Parlons de la Santé Mentale" (Audio) - Relaxation et sons naturels.
+- ID 7: "Avoir le Courage d'en Parler!" (Vidéo) - Séance complète pour l'anxiété.
+- ID 8: "Pleine Conscience" (Vidéo) - Introduction à la pleine conscience.
 
 📌 EXEMPLES DE COMPORTEMENT (INSPIRATION)
 
@@ -124,7 +133,7 @@ export const maxDuration = 30;
 
 export async function POST(request: NextRequest) {
   try {
-    const { messages, journalContext } = await request.json();
+    const { messages, journalContext, userContext } = await request.json();
 
     if (!messages || !Array.isArray(messages)) {
       return new Response('Messages invalides', { status: 400 });
@@ -136,6 +145,22 @@ export async function POST(request: NextRequest) {
     let dynamicSystemPrompt = INA_SYSTEM_PROMPT;
     if (journalContext) {
       dynamicSystemPrompt += `\n\nCONTEXTE JOURNAL (Information contextuelle uniquement) :\n${journalContext}`;
+    }
+    
+    if (userContext) {
+      const { moodTrends, viewedResources } = userContext;
+      let contextInfo = '\n\nCONTEXTE UTILISATEUR :';
+      if (moodTrends?.moodCount > 0) {
+        contextInfo += `\n- Humeur dominante : ${moodTrends.dominantMood} (${moodTrends.moodCount} entrées)`;
+      }
+      if (viewedResources?.totalViews > 0) {
+        contextInfo += `\n- Ressources vues : ${viewedResources.totalViews} (Doc:${viewedResources.types.document}, Audio:${viewedResources.types.audio}, Vidéo:${viewedResources.types.video})`;
+        if (viewedResources.recentResources.length > 0) {
+          contextInfo += `\n- Récentes : ${viewedResources.recentResources.slice(0, 2).map((r: any) => r.title).join(', ')}`;
+        }
+      }
+      contextInfo += '\n\nAdapte tes recommandations selon ces données.';
+      dynamicSystemPrompt += contextInfo;
     }
 
     // 1. Filtrer le message d'accueil (isInitial)

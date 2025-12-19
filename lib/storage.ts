@@ -26,9 +26,13 @@ export interface Appointment {
 
 export interface SavedResource {
   id: string;
+  resourceId: number; // Original resource ID from the resources page
   title: string;
-  type: string;
-  timestamp: string;
+  type: 'document' | 'audio' | 'video';
+  url: string;
+  viewCount: number;
+  lastViewed: string; // ISO timestamp of last view
+  timestamp: string; // ISO timestamp of first view
 }
 
 export interface JournalEntry {
@@ -38,6 +42,25 @@ export interface JournalEntry {
   content: string;
   images: string[]; // Base64 or URLs
   timestamp: string;
+}
+
+export interface Resource {
+  id: number;
+  title: string;
+  description: string;
+  type: "document" | "audio" | "video";
+  checked: boolean;
+  icon: string;
+  // Detail fields
+  pages?: number;
+  currentPage?: number;
+  fileName: string;
+  fileUrl: string;
+  duration?: string;
+  currentTime?: string;
+  // Stats
+  viewCount: number;
+  lastViewed?: string;
 }
 
 export interface JournalSettings {
@@ -60,6 +83,7 @@ export interface UserData {
   expertsContacted: number[]; // Array of expert IDs
   journals: JournalEntry[];
   journalSettings: JournalSettings;
+  resources: Resource[];
 }
 
 const STORAGE_KEY = 'ina_user_data';
@@ -78,6 +102,86 @@ const getInitialData = (): UserData => ({
   journalSettings: {
     aiAccess: false,
   },
+  resources: [
+    {
+      id: 1,
+      title: "Les déterminants de la santé mentale",
+      description: "Techniques de gestion du stress quotidien",
+      type: "document",
+      checked: false,
+      icon: "document",
+      pages: 12,
+      currentPage: 1,
+      fileName: "guide-stress.pdf",
+      fileUrl: "/docs/determinants-sante-mentale.pdf",
+      viewCount: 0
+    },
+    {
+      id: 2,
+      title: "Guide Santé",
+      description: "PDF avec exercices de respiration profonde",
+      type: "document",
+      checked: true,
+      icon: "document",
+      pages: 8,
+      currentPage: 1,
+      fileName: "exercices-respiration.pdf",
+      fileUrl: "/docs/guide_sante.pdf",
+      viewCount: 0
+    },
+    {
+      id: 5,
+      title: "Méditation Guidée",
+      type: "audio",
+      description: "Séance de méditation de 15 minutes",
+      checked: false,
+      icon: "audio",
+      duration: "15:00",
+      currentTime: "00:00",
+      fileName: "meditation-guidee.mp3",
+      fileUrl: "/audio/podcast_v1.mp3",
+      viewCount: 0
+    },
+    {
+      id: 6,
+      title: "Parlons de la Santé Mentale",
+      type: "audio",
+      description: "Sons naturels pour détente",
+      checked: true,
+      icon: "audio",
+      duration: "30:00",
+      currentTime: "00:00",
+      fileName: "sons-relaxation.mp3",
+      fileUrl: "/audio/podcast_v2.mp3",
+      viewCount: 0
+    },
+    {
+      id: 7,
+      title: "Avoir le Courage d'en Parler!",
+      type: "video",
+      description: "Séance complète pour l'anxiété",
+      checked: false,
+      icon: "video",
+      duration: "25:00",
+      currentTime: "00:00",
+      fileName: "sante_mental_v1.mp4",
+      fileUrl: "/video/sante_mental_v1.mp4",
+      viewCount: 0
+    },
+    {
+      id: 8,
+      title: "Pleine Conscience",
+      type: "video",
+      description: "Introduction à la pleine conscience",
+      checked: true,
+      icon: "video",
+      duration: "20:00",
+      currentTime: "00:00",
+      fileName: "sante_mental_v2.mp4",
+      fileUrl: "/video/sante_mental_v2.mp4",
+      viewCount: 0
+    },
+  ]
 });
 
 export const Storage = {
@@ -134,6 +238,14 @@ export const Storage = {
     Storage.saveData(data);
   },
 
+  getResources: () => {
+    return Storage.getData().resources;
+  },
+
+  getResourceById: (id: number) => {
+    return Storage.getData().resources.find(r => r.id === id) || null;
+  },
+
   // Appointments
   addAppointment: (appointment: Omit<Appointment, 'id' | 'timestamp'>) => {
     const data = Storage.getData();
@@ -154,6 +266,83 @@ export const Storage = {
   },
 
   // Resources
+  trackResourceView: (resourceId: number, title: string, type: 'document' | 'audio' | 'video', url: string) => {
+    const data = Storage.getData();
+    const existing = data.savedResources.find(r => r.resourceId === resourceId);
+    
+    if (existing) {
+      // Update existing resource
+      existing.viewCount += 1;
+      existing.lastViewed = new Date().toISOString();
+    } else {
+      // Create new resource entry
+      const newResource: SavedResource = {
+        id: Math.random().toString(36).substr(2, 9),
+        resourceId,
+        title,
+        type,
+        url,
+        viewCount: 1,
+        lastViewed: new Date().toISOString(),
+        timestamp: new Date().toISOString(),
+      };
+      data.savedResources.push(newResource);
+    }
+    
+    // Also update the main resource entry
+    const res = data.resources.find(r => r.id === resourceId);
+    if (res) {
+      res.viewCount += 1;
+      res.lastViewed = new Date().toISOString();
+    }
+    
+    Storage.saveData(data);
+  },
+
+  getViewedResources: () => {
+    return Storage.getData().savedResources;
+  },
+
+  getUserContext: () => {
+    const data = Storage.getData();
+    
+    // Get recent moods (last 7 days)
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    const recentMoods = data.moods.filter(m => new Date(m.timestamp) > sevenDaysAgo);
+    
+    // Calculate dominant mood
+    const moodCounts: Record<string, number> = {};
+    recentMoods.forEach(m => {
+      moodCounts[m.label] = (moodCounts[m.label] || 0) + 1;
+    });
+    const dominantMood = Object.entries(moodCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || 'neutre';
+    
+    // Get resource stats
+    const resourceTypes = { document: 0, audio: 0, video: 0 };
+    data.savedResources.forEach(r => {
+      resourceTypes[r.type] = (resourceTypes[r.type] || 0) + r.viewCount;
+    });
+    
+    // Get recent resources (last 5)
+    const recentResources = [...data.savedResources]
+      .sort((a, b) => new Date(b.lastViewed).getTime() - new Date(a.lastViewed).getTime())
+      .slice(0, 5);
+    
+    return {
+      moodTrends: {
+        recentMoods,
+        dominantMood,
+        moodCount: recentMoods.length,
+      },
+      viewedResources: {
+        types: resourceTypes,
+        recentResources,
+        totalViews: data.savedResources.reduce((sum, r) => sum + r.viewCount, 0),
+      },
+    };
+  },
+
   saveResource: (resource: Omit<SavedResource, 'id' | 'timestamp'>) => {
     const data = Storage.getData();
     const newResource: SavedResource = {
@@ -208,6 +397,16 @@ export const Storage = {
 
   getJournalAiAccess: () => {
     return Storage.getData().journalSettings.aiAccess;
+  },
+
+  updateResourceProgress: (id: number, updates: { currentTime?: string, currentPage?: number }) => {
+    const data = Storage.getData();
+    const res = data.resources.find(r => r.id === id);
+    if (res) {
+      if (updates.currentTime !== undefined) res.currentTime = updates.currentTime;
+      if (updates.currentPage !== undefined) res.currentPage = updates.currentPage;
+      Storage.saveData(data);
+    }
   },
 
   // Export as JSON

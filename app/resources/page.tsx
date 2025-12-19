@@ -1,76 +1,9 @@
 "use client";
 
 import Search from "@/components/ui/Search";
-import Image from "next/image";
+import { Resource, Storage } from "@/lib/storage";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
-
-interface RessourceItem {
-  id: number;
-  title: string;
-  description: string;
-  type: "document" | "audio" | "video";
-  version?: string;
-  checked: boolean;
-  icon: string;
-}
-
-const ressourcesData: RessourceItem[] = [
-  {
-    id: 1,
-    title: "Les déterminants de la santé mentale",
-    description: "Comment savoir évaluer sa santé mentale.",
-    type: "document",
-    checked: false,
-    icon: "document",
-  },
-  {
-    id: 2,
-    title: "Guide Santé",
-    description: "Prendre soin de sa santé.",
-    type: "document",
-    checked: true,
-    icon: "document",
-  },
-  // Audio
-  {
-    id: 5,
-    title: "Méditation Guidée",
-    description: "Méditation guidée pour son bien-être.",
-    type: "audio",
-    version: "V1",
-    checked: false,
-    icon: "audio",
-  },
-  {
-    id: 6,
-    title: "Parlons de la Santé Mentale",
-    description: "Savoir de parler de ce sujet tabou.",
-    type: "audio",
-    version: "V2",
-    checked: true,
-    icon: "audio",
-  },
-  // Vidéo
-  {
-    id: 7,
-    title: "Avoir le Courage d'en Parler!",
-    description: "Comment avoir ce courage là.",
-    type: "video",
-    version: "V1",
-    checked: false,
-    icon: "video",
-  },
-  {
-    id: 8,
-    title: "Pleine Conscience",
-    description: "Parlons tous ensemble...",
-    type: "video",
-    version: "V2",
-    checked: true,
-    icon: "video",
-  },
-];
+import { useEffect, useState } from "react";
 
 const Icon = ({
   name,
@@ -84,80 +17,55 @@ const Icon = ({
       return (
         <svg
           className={className}
+          viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
-          viewBox="0 0 24 24"
+          strokeWidth="2"
         >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-          />
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+          <polyline points="14 2 14 8 20 8" />
+          <line x1="16" y1="13" x2="8" y2="13" />
+          <line x1="16" y1="17" x2="8" y2="17" />
+          <polyline points="10 9 9 9 8 9" />
         </svg>
       );
     case "audio":
       return (
         <svg
           className={className}
+          viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
-          viewBox="0 0 24 24"
+          strokeWidth="2"
         >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"
-          />
+          <path d="M9 18V5l12-2v13" />
+          <circle cx="6" cy="18" r="3" />
+          <circle cx="18" cy="16" r="3" />
         </svg>
       );
     case "video":
       return (
         <svg
           className={className}
+          viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
-          viewBox="0 0 24 24"
+          strokeWidth="2"
         >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
-          />
+          <polygon points="23 7 16 12 23 17 23 7" />
+          <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
         </svg>
       );
     case "check":
       return (
         <svg
           className={className}
+          viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
-          viewBox="0 0 24 24"
+          strokeWidth="3"
         >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={3}
-            d="M5 13l4 4L19 7"
-          />
-        </svg>
-      );
-    case "download":
-      return (
-        <svg
-          className={className}
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-          />
+          <polyline points="20 6 9 17 4 12" />
         </svg>
       );
     default:
@@ -165,46 +73,56 @@ const Icon = ({
   }
 };
 
-const RessourceCard = ({ item }: { item: RessourceItem }) => {
+const RessourceCard = ({ item }: { item: Resource }) => {
   const router = useRouter();
   
   const getIconConfig = (type: "document" | "audio" | "video") => {
     switch (type) {
       case "document":
-        return { src: "/doc_w.svg", bgColor: "bg-primary-orange" };
+        return { icon: "document", color: "text-blue-500", bg: "bg-blue-50" };
       case "audio":
-        return { src: "/aud_w.svg", bgColor: "bg-primary-blue" };
+        return { icon: "audio", color: "text-purple-500", bg: "bg-purple-50" };
       case "video":
-        return { src: "/v_w.svg", bgColor: "bg-primary-light" };
-      default:
-        return { src: "/doc_w.svg", bgColor: "bg-primary-orange" };
+        return { icon: "video", color: "text-red-500", bg: "bg-red-50" };
     }
   };
 
-  const iconConfig = getIconConfig(item.type);
+  const config = getIconConfig(item.type);
 
   return (
     <div 
-      className="bg-white rounded border border-gray-200 p-3 duration-200 active:scale-[0.99] cursor-pointer" 
+      className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 hover:shadow-md transition-all cursor-pointer group"
       onClick={() => router.push(`/resources/${item.id}?type=${item.type}`)}
     >
       <div className="flex items-start gap-4">
-        <div className={`shrink-0 flex items-center justify-center ${iconConfig.bgColor} rounded mt-0.5 w-20 h-20`}>
-          <Image 
-            src={iconConfig.src} 
-            alt={item.type} 
-            width={30} 
-            height={30} 
-          />
+        <div className={`w-12 h-12 rounded-xl ${config.bg} flex items-center justify-center ${config.color} shrink-0`}>
+          <Icon name={config.icon} className="w-6 h-6" />
         </div>
-
+        
         <div className="flex-1 min-w-0">
-          <h3 className="font-medium text-gray-900 text-base truncate">
-            {item.title}
-          </h3>
-          <p className="text-primary-blue font-light text-sm mt-1 line-clamp-2">
+          <div className="flex items-center justify-between mb-1">
+            <h3 className="font-semibold text-gray-900 truncate pr-2">
+              {item.title}
+            </h3>
+            {item.checked && (
+              <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center text-white shrink-0">
+                <Icon name="check" className="w-3 h-3" />
+              </div>
+            )}
+          </div>
+          <p className="text-sm text-gray-500 line-clamp-2 leading-relaxed">
             {item.description}
           </p>
+          <div className="mt-3 flex items-center gap-3">
+            <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md ${config.bg} ${config.color}`}>
+              {item.type}
+            </span>
+            {item.viewCount > 0 && (
+              <span className="text-[10px] text-gray-400 font-medium">
+                Vu {item.viewCount} fois
+              </span>
+            )}
+          </div>
         </div>
       </div>
     </div>
@@ -214,88 +132,61 @@ const RessourceCard = ({ item }: { item: RessourceItem }) => {
 const RessourcesPage = () => {
   const router = useRouter();
   const [activeFilter, setActiveFilter] = useState<"all" | "document" | "audio" | "video">("all");
+  const [resources, setResources] = useState<Resource[]>([]);
 
-  const documents = ressourcesData.filter((item) => item.type === "document");
-  const audio = ressourcesData.filter((item) => item.type === "audio");
-  const video = ressourcesData.filter((item) => item.type === "video");
+  useEffect(() => {
+    setResources(Storage.getResources());
+  }, []);
+
+  const documents = resources.filter((item) => item.type === "document");
+  const audio = resources.filter((item) => item.type === "audio");
+  const video = resources.filter((item) => item.type === "video");
 
   const scrollToSection = (sectionId: string) => {
     const element = document.getElementById(sectionId);
     if (element) {
-      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      const offset = 100;
+      const elementPosition = element.getBoundingClientRect().top;
+      const offsetPosition = elementPosition + window.pageYOffset - offset;
+
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: "smooth"
+      });
     }
   };
 
   const handleFilterClick = (filter: "all" | "document" | "audio" | "video") => {
     setActiveFilter(filter);
-    
-    if (filter === "document") {
-      scrollToSection("documents-section");
-    } else if (filter === "audio") {
-      scrollToSection("audio-section");
-    } else if (filter === "video") {
-      scrollToSection("video-section");
-    } else {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (filter !== "all") {
+      scrollToSection(filter);
     }
   };
 
   const getButtonClass = (type: "all" | "document" | "audio" | "video") => {
     const isActive = activeFilter === type;
-    const baseClass = "flex flex-col items-center gap-2";
-    
-    if (isActive) {
-      switch (type) {
-        case "all":
-          return `${baseClass}`;
-        case "document":
-          return `${baseClass}`;
-        case "audio":
-          return `${baseClass}`;
-        case "video":
-          return `${baseClass}`;
-        default:
-          return baseClass;
-      }
-    }
-    return baseClass;
-  };
-
-  const getButtonIcon = (type: "all" | "document" | "audio" | "video") => {
-    const isActive = activeFilter === type;
-    
-    switch (type) {
-      case "all":
-        return isActive ? "/journal-icon.svg" : "/journal-icon.svg";
-      case "document":
-        return isActive ? "/doc_w.svg" : "/doc_o.svg";
-      case "audio":
-        return isActive ? "/aud_w.svg" : "/aud_o.svg";
-      case "video":
-        return isActive ? "/v_w.svg" : "/v_o.svg";
-      default:
-        return "/journal-icon.svg";
-    }
+    return `flex flex-col items-center gap-2 outline-hidden border-none bg-transparent transition-all duration-300 ${isActive ? 'scale-110' : 'opacity-70 hover:opacity-100'}`;
   };
 
   const getCircleBgColor = (type: "all" | "document" | "audio" | "video") => {
     const isActive = activeFilter === type;
-    
-    if (isActive) {
-      switch (type) {
-        case "all":
-          return "bg-primary-light";
-        case "document":
-          return "bg-primary-orange";
-        case "audio":
-          return "bg-primary-blue";
-        case "video":
-          return "bg-primary-light";
-        default:
-          return "bg-white";
-      }
+    if (!isActive) return "bg-white";
+    switch (type) {
+      case "all": return "bg-primary-orange shadow-orange-100";
+      case "document": return "bg-primary-orange shadow-orange-100";
+      case "audio": return "bg-primary-orange shadow-orange-100";
+      case "video": return "bg-primary-orange shadow-orange-100";
     }
-    return "bg-white";
+  };
+
+  const getButtonIcon = (type: "all" | "document" | "audio" | "video") => {
+    const isActive = activeFilter === type;
+    switch (type) {
+      case "all": return isActive ? "/ressource.svg" : "/ressource.svg"; 
+      case "document": return isActive ? "/doc_w.svg" : "/doc_o.svg";
+      case "audio": return isActive ? "/aud_w.svg" : "/aud_o.svg";
+      case "video": return isActive ? "/v_w.svg" : "/v_o.svg";
+    }
   };
 
   const getTextColor = (type: "all" | "document" | "audio" | "video") => {
@@ -377,68 +268,79 @@ const RessourcesPage = () => {
               <div className={`w-20 h-20 ${getCircleBgColor("video")} rounded-full flex items-center justify-center shadow transition-all duration-300`}>
                 <img 
                   src={getButtonIcon("video")} 
-                  alt="Vidéo" 
+                  alt="Vidéos" 
                   width={24} 
                   height={24} 
                 />
               </div>
               <span className={`text-xs ${getTextColor("video")} transition-colors duration-300`}>
-                Vidéo
+                Vidéos
               </span>
             </button>
           </div>
         </header>
 
-        <section id="documents-section" className="mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl text-gray-800 flex items-center gap-2">
-              Documents
-            </h2>
-            <span className="text-xs w-5 flex items-center justify-center text-white h-5 bg-primary-light md:text-sm p-1 rounded-full">
-              {documents.length}
-            </span>
-          </div>
+        <main className="space-y-12 pb-20">
+          {/* Documents Section */}
+          {(activeFilter === "all" || activeFilter === "document") && documents.length > 0 && (
+            <section id="document" className="scroll-mt-32">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-bold text-gray-900 border-l-4 border-blue-500 pl-3">
+                  Documents
+                </h2>
+                <span className="text-xs font-medium text-gray-400">
+                  {documents.length} ressources
+                </span>
+              </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
-            {documents.map((item) => (
-              <RessourceCard key={item.id} item={item} />
-            ))}
-          </div>
-        </section>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
+                {documents.map((item: Resource) => (
+                  <RessourceCard key={item.id} item={item} />
+                ))}
+              </div>
+            </section>
+          )}
 
-        <section id="audio-section" className="mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl text-gray-800 flex items-center gap-2">
-              Audio
-            </h2>
-            <span className="text-xs w-5 flex items-center justify-center text-white h-5 bg-primary-light md:text-sm p-1 rounded-full">
-              {audio.length}
-            </span>
-          </div>
+          {/* Audio Section */}
+          {(activeFilter === "all" || activeFilter === "audio") && audio.length > 0 && (
+            <section id="audio" className="scroll-mt-32">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-bold text-gray-900 border-l-4 border-purple-500 pl-3">
+                  Audio
+                </h2>
+                <span className="text-xs font-medium text-gray-400">
+                  {audio.length} ressources
+                </span>
+              </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
-            {audio.map((item) => (
-              <RessourceCard key={item.id} item={item} />
-            ))}
-          </div>
-        </section>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
+                {audio.map((item: Resource) => (
+                  <RessourceCard key={item.id} item={item} />
+                ))}
+              </div>
+            </section>
+          )}
 
-        <section id="video-section" className="mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl text-gray-800 flex items-center gap-2">
-              Video
-            </h2>
-            <span className="text-xs w-5 flex items-center justify-center text-white h-5 bg-primary-light md:text-sm p-1 rounded-full">
-              {video.length}
-            </span>
-          </div>
+          {/* Vidéos Section */}
+          {(activeFilter === "all" || activeFilter === "video") && video.length > 0 && (
+            <section id="video" className="scroll-mt-32">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-bold text-gray-900 border-l-4 border-red-500 pl-3">
+                  Vidéos
+                </h2>
+                <span className="text-xs font-medium text-gray-400">
+                  {video.length} ressources
+                </span>
+              </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
-            {video.map((item) => (
-              <RessourceCard key={item.id} item={item} />
-            ))}
-          </div>
-        </section>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
+                {video.map((item: Resource) => (
+                  <RessourceCard key={item.id} item={item} />
+                ))}
+              </div>
+            </section>
+          )}
+        </main>
       </div>
     </div>
   );

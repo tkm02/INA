@@ -326,7 +326,12 @@ export default function HomePage() {
     </div>
   );
 }
-function fire(arg0: number, arg1: { spread: number; startVelocity: number; }) {
-  throw new Error("Function not implemented.");
-}
 
+const fire = (particleRatio: number, opts: any) => {
+  const count = 200;
+  confetti({
+    ...opts,
+    origin: { y: 0.7 },
+    particleCount: Math.floor(count * particleRatio),
+  });
+};

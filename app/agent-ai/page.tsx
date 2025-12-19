@@ -13,6 +13,11 @@ interface Message {
   isInitial?: boolean;
   showActionButtons?: boolean;
   customOptions?: string[];
+  recommendation?: {
+    resourceId: number;
+    title: string;
+    type: string;
+  };
 }
 
 // Fonction utilitaire pour nettoyer le texte affiché (Markdown)
@@ -47,9 +52,12 @@ export default function AgentAIPage() {
   
   // États audio
   const [isMuted, setIsMuted] = useState(false);
+  const [isListening, setIsListening] = useState(false);
   const [voiceGender, setVoiceGender] = useState<'female' | 'male'>('female');
   const [showVoiceMenu, setShowVoiceMenu] = useState(false);
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
+  
+  const recognitionRef = useRef<any>(null);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -147,6 +155,46 @@ export default function AgentAIPage() {
     window.speechSynthesis.speak(utterance);
   };
 
+  // ✅ Voice Recognition (Speech-to-Text)
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      if (SpeechRecognition) {
+        recognitionRef.current = new SpeechRecognition();
+        recognitionRef.current.continuous = false;
+        recognitionRef.current.interimResults = false;
+        recognitionRef.current.lang = 'fr-FR';
+
+        recognitionRef.current.onstart = () => setIsListening(true);
+        recognitionRef.current.onend = () => setIsListening(false);
+        recognitionRef.current.onerror = (event: any) => {
+          console.error("Speech error", event.error);
+          setIsListening(false);
+        };
+        recognitionRef.current.onresult = (event: any) => {
+          const transcript = event.results[0][0].transcript;
+          if (transcript) {
+            sendMessage(transcript);
+          }
+        };
+      }
+    }
+  }, []);
+
+  const startListening = () => {
+    if (recognitionRef.current && !isListening) {
+      // Arrêter la voix d'INA si on commence à écouter
+      window.speechSynthesis.cancel();
+      try {
+        recognitionRef.current.start();
+      } catch (e) {
+        console.error("Recognition error", e);
+      }
+    } else if (isListening) {
+      recognitionRef.current.stop();
+    }
+  };
+
   // Test de voix lors du changement
   const testVoice = (gender: 'male' | 'female') => {
     setVoiceGender(gender);
@@ -185,13 +233,17 @@ export default function AgentAIPage() {
           journalContext = journals.map(j => `Titre: ${j.title}\nContenu: ${j.content}`).join('\n\n');
         }
       }
+      
+      // Get user context for personalization
+      const userContext = Storage.getUserContext();
 
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           messages: [...messages, userMessage],
-          journalContext // Send context to API
+          journalContext,
+          userContext
         }),
       });
 
@@ -214,12 +266,29 @@ export default function AgentAIPage() {
         assistantText = assistantText.replace(optionsMatch[0], '').trim();
       }
 
+      // Check for Resource recommendations
+      let recommendation = undefined;
+      const resourceMatch = assistantText.match(/\[RESOURCE:(\d+)\]/);
+      if (resourceMatch) {
+        const id = parseInt(resourceMatch[1]);
+        const res = Storage.getResourceById(id);
+        if (res) {
+          recommendation = {
+            resourceId: res.id,
+            title: res.title,
+            type: res.type
+          };
+        }
+        assistantText = assistantText.replace(resourceMatch[0], '').trim();
+      }
+
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
         content: assistantText,
         showActionButtons: showActions,
         customOptions: options,
+        recommendation
       };
 
       setMessages((prev) => [...prev, assistantMessage]);
@@ -372,6 +441,29 @@ export default function AgentAIPage() {
                 ))}
               </div>
             )}
+
+            {/* Bouton Recommandation Ressource */}
+            {message.recommendation && (
+              <div className="mt-3 ml-10 animate-in fade-in slide-in-from-top-2 duration-500">
+                <button 
+                  onClick={() => router.push(`/resources/${message.recommendation?.resourceId}`)}
+                  className="flex items-center gap-3 px-4 py-3 bg-white border-2 border-primary-blue text-primary-blue rounded-2xl font-bold hover:bg-blue-50 transition-all shadow-sm"
+                >
+                  <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
+                    {message.recommendation.type === 'document' && <Image src="/doc_w.svg" width={16} height={16} alt="doc" className="invert-0 filter brightness-50" />}
+                    {message.recommendation.type === 'audio' && <Image src="/aud_w.svg" width={16} height={16} alt="audio" className="invert-0 filter brightness-50" />}
+                    {message.recommendation.type === 'video' && <Image src="/v_w.svg" width={16} height={16} alt="video" className="invert-0 filter brightness-50" />}
+                  </div>
+                  <div className="text-left">
+                    <p className="text-[10px] uppercase tracking-wider opacity-60">Recommandation</p>
+                    <p className="text-sm">Voir : {message.recommendation.title}</p>
+                  </div>
+                  <svg className="w-5 h-5 ml-auto" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <path d="M9 18l6-6-6-6" />
+                  </svg>
+                </button>
+              </div>
+            )}
           </div>
         ))}
         {isLoading && (
@@ -387,6 +479,14 @@ export default function AgentAIPage() {
              </div>
           </div>
         )}
+        {isListening && (
+          <div className="flex justify-end pr-4">
+            <div className="bg-orange-100 text-[#E86C00] px-4 py-2 rounded-2xl flex items-center gap-2 animate-pulse border border-orange-200">
+              <div className="w-2 h-2 bg-orange-500 rounded-full animate-ping" />
+              <span className="text-xs font-bold uppercase tracking-wider">Écoute en cours...</span>
+            </div>
+          </div>
+        )}
         <div ref={messagesEndRef} />
       </div>
 
@@ -396,20 +496,21 @@ export default function AgentAIPage() {
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Message..."
-            disabled={isLoading}
+            placeholder={isListening ? "Parle maintenant..." : "Message..."}
+            disabled={isLoading || isListening}
             className="flex-1 px-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:border-[#00569E] focus:ring-1 focus:ring-[#00569E] disabled:bg-gray-100 disabled:cursor-not-allowed text-gray-900"
           />
           <button 
             type="button"
-            className="p-3 bg-white border border-gray-300 rounded-full hover:bg-gray-50 transition-colors"
+            onClick={startListening}
+            className={`p-3 border rounded-full transition-all ${isListening ? 'bg-orange-500 border-orange-600 text-white shadow-lg scale-110' : 'bg-white border-gray-300 text-gray-600 hover:bg-gray-50'}`}
             disabled={isLoading}
           >
-            <Mic size={20} className="text-gray-600" />
+            <Mic size={20} className={isListening ? 'animate-pulse' : ''} />
           </button>
           <button
             type="submit"
-            disabled={isLoading || !input.trim()}
+            disabled={isLoading || isListening || !input.trim()}
             className="p-3 bg-[#E86C00] rounded-full hover:bg-[#d66200] transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
           >
             <Send size={20} className="text-white" />

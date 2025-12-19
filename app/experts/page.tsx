@@ -1,6 +1,7 @@
 "use client";
 
 import Search from "@/components/ui/Search";
+import { useTheme } from "@/lib/theme-context";
 import { Calendar, Clock, MapPin } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -58,6 +59,7 @@ const experts = [
 ];
 
 export default function ExpertsPage() {
+  const { theme } = useTheme();
   const [selectedExpert, setSelectedExpert] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const router = useRouter()
@@ -72,9 +74,15 @@ export default function ExpertsPage() {
   });
 
   return (
-    <div className="min-h-screen bg-white">
-      <div className="px-4 py-4 mt-1.5">
-       <Image src="/arrow-return.svg" alt="retour" width={25} height={25} onClick={() => router.back()} className="cursor-pointer"/>
+    <div className={`min-h-screen transition-colors duration-300 ${
+      theme === 'dark' ? 'bg-gray-900' : 'bg-white'
+    }`}>
+      <div className="px-4 py-4 mt-1.5 flex items-center justify-between">
+       <button onClick={() => router.back()} className={`p-2 rounded-full ${theme === 'dark' ? 'hover:bg-gray-800' : 'hover:bg-gray-100'}`}>
+         <Image src="/arrow-return.svg" alt="retour" width={25} height={25} className={theme === 'dark' ? 'invert' : ''}/>
+       </button>
+       <h1 className={`text-xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>Experts</h1>
+       <div className="w-10" />
       </div>
 
       {/* Search Bar */}
@@ -89,89 +97,81 @@ export default function ExpertsPage() {
         {filteredExperts.length > 0 ? (
           filteredExperts.map((expert, index) => (
           <div key={expert.id} className="mb-4">
-            <div className="bg-white border border-gray-200 rounded-md p-4">
-              <div className="flex items-start mb-4 gap-3">
-                <div className="w-12 h-12 bg-gray-100 rounded-full shrink-0 overflow-hidden flex items-center justify-center">
+            <div className={`${
+              theme === 'dark' ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200 shadow-sm'
+            } border rounded-3xl p-5 transition-all`}>
+              <div className="flex items-start mb-4 gap-4">
+                <div className="w-14 h-14 bg-gray-100 dark:bg-gray-700 rounded-2xl shrink-0 overflow-hidden flex items-center justify-center border-2 border-primary-blue/10">
                   <img
                     src={expert.image}
                     alt={expert.name}
-                    width={48}
-                    height={48}
                     className="object-cover w-full h-full"
                   />
                 </div>
 
-                <div className="flex-1 flex items-start ">
-                  <div>
-                    <h3 className="font-bold text-gray-900 text-lg">
+                <div className="flex-1">
+                    <h3 className={`font-black text-lg leading-tight ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
                        {expert.name}
                     </h3>
-                    <p className="text-gray-600 text-sm mt-1">{expert.title}</p>
-                  </div>
+                    <p className={`text-sm mt-1 font-medium ${theme === 'dark' ? 'text-blue-400' : 'text-primary-blue'}`}>{expert.title}</p>
+                </div>
 
-                  <div className="shrink-0 ml-2 relative top-1">
-                    <img
-                      src="/verify.svg"
-                      width={20}
-                      height={20}
-                      alt="verify"
-                    />
-                  </div>
+                <div className="shrink-0 relative top-1">
+                  <Image
+                    src="/verify.svg"
+                    width={22}
+                    height={22}
+                    alt="verify"
+                  />
                 </div>
               </div>
 
               {/* Date and Time */}
-              <div className="flex items-center gap-4 mb-4">
-                <div className="flex items-center gap-2">
-                  <Calendar size={16} className="text-gray-400" />
-                  <span className="text-gray-700 text-sm font-medium">
+              <div className="grid grid-cols-2 gap-3 mb-5">
+                <div className={`flex items-center gap-2 p-2 rounded-xl ${theme === 'dark' ? 'bg-gray-700/50' : 'bg-gray-50'}`}>
+                  <Calendar size={14} className="text-primary-blue" />
+                  <span className={`text-xs font-bold ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
                     {expert.date}
                   </span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Clock size={16} className="text-gray-400" />
-                  <span className="text-gray-700 text-sm font-medium">
+                <div className={`flex items-center gap-2 p-2 rounded-xl ${theme === 'dark' ? 'bg-gray-700/50' : 'bg-gray-50'}`}>
+                  <Clock size={14} className="text-primary-blue" />
+                  <span className={`text-xs font-bold ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
                     {expert.time}
                   </span>
                 </div>
               </div>
 
               {/* Location */}
-              <div className="flex items-center gap-2 mb-6">
-                <MapPin size={16} className="text-gray-400" />
-                <span className="text-gray-600 text-sm">{expert.location}</span>
+              <div className="flex items-center gap-2 mb-6 px-2">
+                <MapPin size={14} className="text-red-500" />
+                <span className={`text-xs font-medium ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>{expert.location}</span>
               </div>
 
-              {/* Separator */}
-              <div className="border-t border-gray-200 mb-4"></div>
-
-              {/* Detail Button */}
+              {/* Action Button */}
               <button
                 onClick={() => router.push(`/experts/detail?id=${expert.id}`)}
-                className="w-full text-center"
+                className={`w-full py-3 rounded-2xl font-black text-sm transition-all active:scale-[0.98] ${
+                  theme === 'dark' ? 'bg-gray-700 text-white hover:bg-gray-600' : 'bg-primary-blue text-white hover:bg-primary-light shadow-lg shadow-blue-500/20'
+                }`}
               >
-                <span className="text-[#00569E] font-medium text-sm">
-                  Detail
-                </span>
+                Voir le profil
               </button>
             </div>
-
-            {index < filteredExperts.length - 1 && (
-              <div className="border-t border-gray-200 my-4"></div>
-            )}
           </div>
         ))
       ) : (
         <div className="flex flex-col items-center justify-center py-20 text-center">
-          <div className="bg-gray-50 p-6 rounded-full mb-4">
-            <Image src="/search-normal.svg" width={40} height={40} alt="no results" className="opacity-20" />
+          <div className={`${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-50'} p-8 rounded-full mb-6`}>
+            <Image src="/search-normal.svg" width={48} height={48} alt="no results" className="opacity-20" />
           </div>
-          <p className="text-gray-500 font-medium">Aucun expert trouvé pour "{searchQuery}"</p>
+          <p className={`font-black text-lg mb-2 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>Aucun expert trouvé</p>
+          <p className="text-gray-500 text-sm mb-6 max-w-[240px]">Désolé, nous n'avons pas trouvé de résultats pour "{searchQuery}"</p>
           <button 
             onClick={() => setSearchQuery("")}
-            className="text-primary-blue text-sm mt-2 font-semibold"
+            className="text-primary-blue font-black text-sm uppercase tracking-widest hover:text-primary-light transition-colors"
           >
-            Réinitialiser la recherche
+            Réinitialiser
           </button>
         </div>
       )}

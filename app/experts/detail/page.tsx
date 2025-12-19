@@ -1,7 +1,7 @@
 "use client";
 
 import { Storage } from "@/lib/storage";
-import { MapPin, Video } from "lucide-react";
+import { useTheme } from "@/lib/theme-context";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 
@@ -113,6 +113,7 @@ const experts = [
 ];
 
 export default function ExpertDetailPage() {
+  const { theme } = useTheme();
   const searchParams = useSearchParams();
   const router = useRouter();
   const expertId = parseInt(searchParams.get("id") || "1");
@@ -121,9 +122,9 @@ export default function ExpertDetailPage() {
 
   if (!expert) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
+      <div className={`min-h-screen flex items-center justify-center ${theme === 'dark' ? 'bg-gray-900' : 'bg-white'}`}>
         <div className="text-center">
-          <h1 className="text-xl font-semibold text-gray-900">Expert non trouvé</h1>
+          <h1 className={`text-xl font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>Expert non trouvé</h1>
           <button onClick={() => router.push("/experts")} className="mt-4 text-[#00569E] font-medium">
             Retour à la liste
           </button>
@@ -146,96 +147,107 @@ export default function ExpertDetailPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white pb-20">
-      <div className="px-4 py-4 mt-1.5 overflow-hidden">
-        <Image src="/arrow-return.svg" alt="retour" width={25} height={25} onClick={() => router.back()} className="cursor-pointer"/>
+    <div className={`min-h-screen transition-colors duration-300 pb-24 ${
+      theme === 'dark' ? 'bg-gray-900 text-white' : 'bg-white'
+    }`}>
+      <div className="px-4 py-4 mt-1.5 flex items-center justify-between">
+        <button onClick={() => router.back()} className={`p-2 rounded-full ${theme === 'dark' ? 'hover:bg-gray-800' : 'hover:bg-gray-100'}`}>
+          <Image src="/arrow-return.svg" alt="retour" width={25} height={25} className={theme === 'dark' ? 'invert' : ''}/>
+        </button>
+        <h1 className={`text-xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>Détails de l'expert</h1>
+        <div className="w-10" />
       </div>
       
       <div className="px-4 py-6">
-        <div className="flex items-start mb-4 gap-3">
-          <div className="w-12 h-12 bg-gray-100 rounded-full shrink-0 overflow-hidden flex items-center justify-center">
-            <img src={expert.image} alt={expert.name} width={48} height={48} className="object-cover w-full h-full" />
+        <div className="flex items-start mb-8 gap-5">
+          <div className="w-20 h-20 bg-gray-100 dark:bg-gray-800 rounded-3xl shrink-0 overflow-hidden flex items-center justify-center border-2 border-primary-blue/20">
+            <img src={expert.image} alt={expert.name} className="object-cover w-full h-full" />
           </div>
 
-          <div className="flex-1 flex items-start justify-between ">
-            <div>
-              <h3 className="font-bold text-gray-900 text-lg">{expert.name}</h3>
-              <p className="text-gray-600 text-sm mt-1">{expert.title}</p>
-            </div>
-            <div className="shrink-0 ml-2 flex flex-col items-end relative top-1">
-              <img src="/verify.svg" width={25} height={25} alt="verify" />
-              <div className="flex items-center gap-2 mb-8">
-                <span className="text-primary-light text-sm">{expert.rating}/5</span>
-                <span className="text-primary-light text-sm">({expert.reviews} avis)</span>
+          <div className="flex-1">
+              <div className="flex items-center gap-2 mb-1">
+                <h3 className={`font-black text-2xl leading-tight ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{expert.name}</h3>
+                <Image src="/verify.svg" width={20} height={20} alt="verify" className="shrink-0" />
               </div>
-            </div>
+              <p className={`text-sm font-bold uppercase tracking-widest ${theme === 'dark' ? 'text-blue-400' : 'text-primary-blue'}`}>{expert.title}</p>
+              
+              <div className="flex items-center gap-3 mt-3">
+                <div className="flex items-center gap-1.5">
+                    <span className="text-yellow-500 text-lg">⭐</span>
+                    <span className="text-sm font-black">{expert.rating}</span>
+                </div>
+                <span className={`text-[10px] font-bold uppercase tracking-widest ${theme === 'dark' ? 'text-gray-500' : 'text-gray-400'}`}>{expert.reviews} avis</span>
+              </div>
           </div>
         </div>
 
         {/* Spécialités */}
         <div className="mb-8">
-          <div className="flex items-center justify-between gap-2 mb-4">
-            <h3 className="font-semibold text-gray-900 text-lg">📌 Spécialités :</h3>
-            <Image src={"/line.svg"} width={100} height={40} alt="line" />
+          <div className="flex items-center justify-between mb-4">
+            <h3 className={`font-black text-lg ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>Spécialités</h3>
+            <div className={`h-1 w-12 rounded-full ${theme === 'dark' ? 'bg-gray-800' : 'bg-blue-50'}`} />
           </div>
-          <ul className="space-y-2 pl-8 bg-[#F1F1F1] rounded py-3">
+          <div className="flex flex-wrap gap-2">
             {expert.specialties.map((specialty, index) => (
-              <li key={index} className="flex items-start gap-2">
-                <span className="text-gray-500">•</span>
-                <span className="text-gray-700">{specialty}</span>
-              </li>
+              <span key={index} className={`px-4 py-3 rounded-2xl text-sm font-medium ${
+                theme === 'dark' ? 'bg-gray-800 text-gray-300' : 'bg-blue-50 text-primary-light'
+              }`}>
+                {specialty}
+              </span>
             ))}
-          </ul>
+          </div>
         </div>
 
         {/* Consultations */}
         <div className="mb-8">
-          <div className="flex items-center justify-between gap-2 mb-4">
-            <div className="flex items-center space-x-1">
-              <Video size={20} className="text-primary-light" />
-              <h3 className="font-semibold text-gray-900 text-lg">Consultations :</h3>
-            </div>
-            <Image src={"/line.svg"} width={100} height={40} alt="line" />
+           <div className="flex items-center justify-between mb-4">
+            <h3 className={`font-black text-lg ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>Consultations</h3>
+            <div className={`h-1 w-12 rounded-full ${theme === 'dark' ? 'bg-gray-800' : 'bg-blue-50'}`} />
           </div>
-          <ul className="space-y-3 pl-8 bg-[#F1F1F1] rounded py-3">
+          <div className="space-y-3">
             {expert.consultations.map((consult, index) => (
-              <li key={index} className="flex items-start gap-2">
-                <span className="text-gray-500">•</span>
-                <span className="text-gray-700 font-medium">
-                  {consult.type} {consult.duration && `: ${consult.duration}`} {consult.price && `- ${consult.price}`}
-                </span>
-              </li>
+              <div key={index} className={`p-5 rounded-3xl flex items-center justify-between ${
+                theme === 'dark' ? 'bg-gray-800 border border-gray-700' : 'bg-gray-50'
+              }`}>
+                <div className="flex items-center gap-4">
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${theme === 'dark' ? 'bg-gray-700' : 'bg-white shadow-sm'}`}>
+                        {consult.type === 'Vidéo' ? '📹' : '📦'}
+                    </div>
+                   <div>
+                      <p className={`font-black text-sm ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{consult.type}</p>
+                      {consult.duration && <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">{consult.duration}</p>}
+                   </div>
+                </div>
+                {consult.price && <span className="font-black text-primary-blue">{consult.price}</span>}
+              </div>
             ))}
-          </ul>
+          </div>
         </div>
 
         {/* Disponibilité */}
         <div className="mb-8">
-          <div className="flex items-center justify-between gap-2 mb-4">
-            <h3 className="font-semibold text-gray-900 text-lg">🕒 Disponible :</h3>
-            <Image src={"/line.svg"} width={100} height={40} alt="line" />
+          <div className="flex items-center justify-between mb-4">
+            <h3 className={`font-black text-lg ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>Disponibilités</h3>
+            <div className={`h-1 w-12 rounded-full ${theme === 'dark' ? 'bg-gray-800' : 'bg-blue-50'}`} />
           </div>
-          <div className="pl-8 bg-[#F1F1F1] rounded py-3">
+          <div className={`p-6 rounded-3xl ${theme === 'dark' ? 'bg-gray-800/50 border border-gray-700' : 'bg-blue-50/50'}`}>
             {expert.availability.map((time, index) => (
-              <p key={index} className="text-gray-700">{time}</p>
+              <p key={index} className={`text-sm font-medium mb-1 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>{time}</p>
             ))}
           </div>
         </div>
 
         {/* Localisation & Map */}
         <div className="mb-8">
-          <div className="flex items-center justify-between gap-2 mb-4">
-            <div className="flex items-center space-x-1">
-              <MapPin size={20} className="text-red-500" />
-              <h3 className="font-semibold text-gray-900 text-lg">Localisation :</h3>
-            </div>
-            <Image src={"/line.svg"} width={100} height={40} alt="line" />
+          <div className="flex items-center justify-between mb-4">
+            <h3 className={`font-black text-lg ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>Localisation</h3>
+            <div className={`h-1 w-12 rounded-full ${theme === 'dark' ? 'bg-gray-800' : 'bg-blue-50'}`} />
           </div>
-          <div className="pl-8 bg-[#F1F1F1] rounded py-3 mb-4">
-            <p className="text-gray-700">{expert.detailedLocation}</p>
-          </div>
+          <p className="text-sm font-medium text-gray-500 mb-4 px-1">{expert.detailedLocation}</p>
           
-          <div className="relative w-full h-64 rounded-2xl overflow-hidden shadow-lg border-2 border-gray-100 bg-gray-50">
+          <div className={`relative w-full h-64 rounded-[2.5rem] overflow-hidden shadow-2xl border-4 ${
+            theme === 'dark' ? 'border-gray-800 bg-gray-800' : 'border-white bg-gray-50 shadow-blue-900/10'
+          }`}>
             <iframe
               width="100%"
               height="100%"
@@ -262,14 +274,16 @@ export default function ExpertDetailPage() {
         {/* Bouton Action */}
         <div className="mt-12">
           <button
-            className={`w-full ${expert.available ? "bg-primary-orange" : "bg-orange-400"} text-white font-semibold py-4 px-6 rounded flex items-center justify-between text-lg`}
+            className={`w-full ${expert.available ? "bg-primary-orange shadow-orange-500/30" : "bg-gray-400"} text-white font-black py-5 px-8 rounded-[2rem] flex items-center justify-between text-lg shadow-2xl transition-all active:scale-[0.98]`}
             onClick={handleBookAppointment}
           >
-            <div className="flex items-center space-x-2">
-              <Image src={"/phone.svg"} width={25} height={25} alt="phone" />
+            <div className="flex items-center gap-4">
+              <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+                 <Image src={"/phone.svg"} width={20} height={20} alt="phone" className="invert" />
+              </div>
               <span>{expert.available ? "Prendre un RDV" : "Indisponible"}</span>
             </div>
-            <Image src={"/arrow-return-white.svg"} width={25} height={25} alt="arrow-right" />
+            <Image src={"/arrow-return-white.svg"} width={24} height={24} alt="arrow-right" className="rotate-180" />
           </button>
         </div>
       </div>

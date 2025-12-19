@@ -11,6 +11,7 @@ export interface ChatMessage {
   id: string;
   role: 'user' | 'assistant';
   content: string;
+  audio?: string; // Base64 audio data
   timestamp: string;
 }
 
@@ -77,10 +78,22 @@ export interface JournalSettings {
   aiAccess: boolean;
 }
 
+
+export interface Notification {
+  id: string;
+  title: string;
+  message: string;
+  type: 'info' | 'success' | 'warning' | 'report';
+  timestamp: string;
+  read: boolean;
+  link?: string;
+}
+
 export interface UserData {
   profile: {
     name: string;
     email: string;
+    pin?: string;
     joinedAt: string;
   } | null;
   moods: MoodEntry[];
@@ -95,6 +108,7 @@ export interface UserData {
   journalSettings: JournalSettings;
   resources: Resource[];
   diagnostics: DiagnosticResult[];
+  notifications: Notification[];
 }
 
 const STORAGE_KEY = 'ina_user_data';
@@ -193,7 +207,8 @@ const getInitialData = (): UserData => ({
       viewCount: 0
     },
   ],
-  diagnostics: []
+  diagnostics: [],
+  notifications: []
 });
 
 export const Storage = {
@@ -216,7 +231,8 @@ export const Storage = {
       journalSettings: {
         ...initial.journalSettings,
         ...(data.journalSettings || {})
-      }
+      },
+      notifications: data.notifications || []
     };
   },
 
@@ -444,5 +460,32 @@ export const Storage = {
 
   getDiagnostics: () => {
     return Storage.getData().diagnostics;
+  },
+
+  // Notifications
+  addNotification: (notification: Omit<Notification, 'id' | 'timestamp' | 'read'>) => {
+    const data = Storage.getData();
+    const newNotification: Notification = {
+      ...notification,
+      id: Math.random().toString(36).substr(2, 9),
+      timestamp: new Date().toISOString(),
+      read: false
+    };
+    data.notifications.unshift(newNotification);
+    Storage.saveData(data);
+    return newNotification;
+  },
+
+  getNotifications: () => {
+    return Storage.getData().notifications;
+  },
+
+  markNotificationAsRead: (id: string) => {
+    const data = Storage.getData();
+    const index = data.notifications.findIndex(n => n.id === id);
+    if (index !== -1) {
+      data.notifications[index].read = true;
+      Storage.saveData(data);
+    }
   }
 };

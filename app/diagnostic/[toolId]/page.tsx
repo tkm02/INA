@@ -17,12 +17,32 @@ export default function QuizPage() {
   const [isFinished, setIsFinished] = useState(false);
   const [hasExpert, setHasExpert] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [reportGenerated, setReportGenerated] = useState(false);
+  const [expertReport, setExpertReport] = useState<string | null>(null);
 
   useEffect(() => {
     const data = Storage.getData();
     // Use expertsContacted or appointments as a proxy for having an expert
     setHasExpert(data.expertsContacted.length > 0 || data.appointments.some(a => a.status === 'confirmed'));
   }, []);
+
+  useEffect(() => {
+    if (isFinished && hasExpert && !reportGenerated) {
+      const timer = setTimeout(() => {
+        const report = "Selon l'expert, vos résultats indiquent un niveau de stress modéré. Il est conseillé de pratiquer des exercices de respiration et de maintenir un rythme de sommeil régulier. Voilà voilà, l'expert recommande également une consultation de suivi pour approfondir ces points.";
+        setExpertReport(report);
+        setReportGenerated(true);
+        
+        Storage.addNotification({
+          title: "Rapport de l'expert disponible",
+          message: "L'expert a généré un rapport suite à votre diagnostic.",
+          type: "report",
+          link: `/diagnostic/${quizId}`
+        });
+      }, 8000);
+      return () => clearTimeout(timer);
+    }
+  }, [isFinished, hasExpert, reportGenerated, quizId]);
 
   if (!quiz) {
     return (
@@ -45,6 +65,30 @@ export default function QuizPage() {
     } else {
       finishQuiz(nextAnswers);
     }
+  };
+
+  const handleExplainWithAI = () => {
+    if (!expertReport) return;
+    
+    // Save the report context to storage so the AI knows what to explain
+    const messages = Storage.getData().conversations.messages;
+    const newMessages = [
+      ...messages,
+      {
+        id: Math.random().toString(36).substr(2, 9),
+        role: 'user' as const,
+        content: `Peux-tu mieux m'expliquer le rapport du médecin suivant : "${expertReport}"`,
+        timestamp: new Date().toISOString()
+      },
+      {
+        id: Math.random().toString(36).substr(2, 9),
+        role: 'assistant' as const,
+        content: "Bien sûr. Le rapport de l'expert souligne un stress modéré, ce qui est une réaction normale à des situations exigeantes. Les recommandations visent à stabiliser votre système nerveux par la respiration et le repos. Voulez-vous que nous explorions ensemble des techniques spécifiques ?",
+        timestamp: new Date().toISOString()
+      }
+    ];
+    Storage.saveChatHistory(newMessages);
+    router.push('/agent-ai');
   };
 
   const finishQuiz = (finalAnswers: Record<number, number>) => {
@@ -75,9 +119,21 @@ export default function QuizPage() {
           
           <h2 className="text-2xl font-bold text-gray-900 mb-4">Test Terminé !</h2>
           
-          <div className="bg-gray-50 rounded-2xl p-6 mb-8 border border-gray-100 italic text-gray-700">
-            {hasExpert ? (
-                "Merci d'avoir complété cette évaluation. Votre expert a été notifié et reviendra vers vous dès qu'il aura analysé vos résultats. Veuillez patienter le temps de son retour."
+          <div className="bg-gray-50 rounded-2xl p-6 mb-8 border border-gray-100 italic text-gray-700 w-full">
+            {reportGenerated ? (
+                <div className="text-left not-italic">
+                    <p className="font-bold mb-2 text-primary-blue">Rapport de l'expert :</p>
+                    <p className="mb-4 text-sm leading-relaxed">{expertReport}</p>
+                    <button 
+                        onClick={handleExplainWithAI}
+                        className="text-xs bg-primary-blue/10 text-primary-blue px-3 py-2 rounded-lg font-bold flex items-center gap-2 hover:bg-primary-blue/20 transition-colors"
+                    >
+                        <span>🤖</span>
+                        Mieux expliquer le rapport
+                    </button>
+                </div>
+            ) : hasExpert ? (
+                "Merci d'avoir complété cette évaluation. Votre expert a été notifié et reviendra vers vous dès qu'il aura analysé vos résultats. Veuillez patienter le temps de son retour (environ 8 secondes pour cette démo)."
             ) : (
                 "Merci pour votre confiance. Pour assurer votre bien-être, nous vous conseillons vivement de rentrer en contact avec un de nos experts. Il pourra analyser vos résultats de manière approfondie et vous proposer le suivi le plus adapté à votre situation."
             )}

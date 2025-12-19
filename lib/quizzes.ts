@@ -40,6 +40,44 @@ export const QUIZZES: Record<string, Quiz> = {
       { id: 6, text: "Devenir facilement contrarié(e) ou irritable ?", type: 'scale' },
       { id: 7, text: "Avoir peur que quelque chose de terrible ne se produise ?", type: 'scale' }
     ]
+  },
+  "burnout": {
+    id: "burnout",
+    title: "Évaluation du Burn-out (MBI-C)",
+    questions: [
+      { id: 1, text: "Je me sens émotionnellement épuisé(e) par mon travail.", type: 'scale' },
+      { id: 2, text: "Je me sens 'à bout' à la fin de ma journée de travail.", type: 'scale' },
+      { id: 3, text: "Je me sens fatigué(e) quand je me lève le matin.", type: 'scale' },
+      { id: 4, text: "Travailler toute une journée est une corvée pour moi.", type: 'scale' },
+      { id: 5, text: "Je peux comprendre facilement ce que mes collègues/proches ressentent.", type: 'scale' }
+    ]
+  },
+  "stress": {
+    id: "stress",
+    title: "Échelle de Stress Perçu (PSS)",
+    questions: [
+      { id: 1, text: "Au cours du dernier mois, avec quelle fréquence avez-vous été fâché(e) à cause d'un événement imprévu ?", type: 'scale' },
+      { id: 2, text: "Au cours du dernier mois, avec quelle fréquence avez-vous senti que vous ne pouviez pas contrôler les choses importantes de votre vie ?", type: 'scale' },
+      { id: 3, text: "Au cours du dernier mois, avec quelle fréquence vous êtes-vous senti(e) nerveux(se) ou stressé(e) ?", type: 'scale' }
+    ]
+  },
+  "eating-disorders": {
+    id: "eating-disorders",
+    title: "Questionnaire SCOFF (Troubles Alimentaires)",
+    questions: [
+      { id: 1, text: "Vous faites-vous vomir parce que vous vous sentez mal à l'aise d'avoir trop mangé ?", type: 'scale' },
+      { id: 2, text: "Vous inquiétez-vous d'avoir perdu le contrôle sur les quantités que vous mangez ?", type: 'scale' },
+      { id: 3, text: "Avez-vous récemment perdu plus de 6 kg en 3 mois ?", type: 'scale' }
+    ]
+  },
+  "adhd": {
+    id: "adhd",
+    title: "TDAH (ASRS v1.1)",
+    questions: [
+      { id: 1, text: "À quelle fréquence avez-vous des difficultés à finir les derniers détails d'un projet ?", type: 'scale' },
+      { id: 2, text: "À quelle fréquence avez-vous des difficultés à mettre les choses en ordre ?", type: 'scale' },
+      { id: 3, text: "À quelle fréquence oubliez-vous des rendez-vous ou des obligations ?", type: 'scale' }
+    ]
   }
 };
 

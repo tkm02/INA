@@ -1,344 +1,570 @@
-"use client";
+'use client';
 
-import React, { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { useRouter } from "next/navigation"; 
+import { ChatMessage, Storage } from "@/lib/storage";
+import { Loader2, Mic, Send, Volume2, VolumeX } from "lucide-react";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { useEffect, useRef, useState } from 'react';
 
-const slides = [
-  {
-    title: "INA",
-    description: "I'm Not Alone - Vous n'êtes pas seul(e)",
-    image: "/splash.svg",
-    bullets: [],
-  },
-  {
-    title: "Anonymat garanti",
-    description: "",
-    image: "/lock.svg",
-    bullets: [
-      "Vos données sont protégées et confidentielles.",
-      "Votre anonymat est garanti.",
-      "Vous pouvez vous exprimer librement.",
-    ],
-  },
-  {
-    title: "IA + experts psychologue",
-    description:
-      "Une oreille pour écouter, des professionnels pour vous accompagner",
-    image: "/healthy.svg",
-    bullets: [],
-  },
-  {
-    title: "Quand ça ne va vraiment pas",
-    description:
-      "L'application peut t'orienter rapidement vers un expert issu d'un centre hospitalier reconnu.",
-    image: "/good.svg",
-    bullets: [],
-  },
-];
+interface Message {
+  id: string;
+  role: 'user' | 'assistant';
+  content: string;
+  isInitial?: boolean;
+  showActionButtons?: boolean;
+  customOptions?: string[];
+  recommendation?: {
+    resourceId: number;
+    title: string;
+    type: string;
+  };
+}
 
-// Variantes d'animation
-const slideVariants = {
-  enter: (direction: number) => ({
-    x: direction > 0 ? 300 : -300,
-    opacity: 0,
-    scale: 0.9,
-  }),
-  center: {
-    x: 0,
-    opacity: 1,
-    scale: 1,
-    transition: {
-      type: "spring" as const,
-      stiffness: 300,
-      damping: 30,
-      duration: 0.5,
-    }
-  },
-  exit: (direction: number) => ({
-    x: direction > 0 ? -300 : 300,
-    opacity: 0,
-    scale: 0.9,
-    transition: {
-      duration: 0.3,
-    }
-  }),
+// Nettoyage affichage (Markdown)
+const cleanDisplayText = (text: string) => {
+  return text.replace(/\*\*/g, '').replace(/__/g, '');
 };
 
-const bulletVariants = {
-  initial: { opacity: 0, x: -20 },
-  animate: (i: number) => ({
-    opacity: 1,
-    x: 0,
-    transition: {
-      delay: i * 0.1 + 0.3,
-      duration: 0.4,
-    }
-  })
+// Nettoyage TTS (Markdown + emojis)
+const cleanSpeechText = (text: string) => {
+  return text
+    .replace(/\*\*/g, '')
+    .replace(/__/g, '')
+    .replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F1E0}-\u{1F1FF}\u{2702}-\u{27B0}\u{24C2}-\u{1F251}]/gu, '')
+    .replace(/\[.*?\]/g, '')
+    .trim();
 };
 
-export default function OnboardingPWA() {
-  const [currentSlide, setCurrentSlide] = useState(0);
-  const [direction, setDirection] = useState(0);
-  const slide = slides[currentSlide];
-  const router = useRouter(); 
+export default function AgentAIPage() {
+  const router = useRouter();
 
-  const handleNext = () => {
-    if (currentSlide < slides.length - 1) {
-      setDirection(1);
-      setCurrentSlide(currentSlide + 1);
+  const [messages, setMessages] = useState<Message[]>([
+    {
+      id: "1",
+      role: "assistant",
+      content:
+        "Bonjour ! Je suis INA, ton amie virtuelle. Je suis là pour t'écouter sans jugement. Comment te sens-tu aujourd'hui ?",
+      isInitial: true,
+    },
+  ]);
+  const [input, setInput] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Audio
+  const [isMuted, setIsMuted] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+  const [voiceGender, setVoiceGender] = useState<'female' | 'male'>('female');
+  const [showVoiceMenu, setShowVoiceMenu] = useState(false);
+  const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
+
+  const recognitionRef = useRef<any>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  // Charger l'historique du chat
+  useEffect(() => {
+    const data = Storage.getData();
+    if (data.conversations.messages.length > 0) {
+      const history: Message[] = data.conversations.messages.map((m) => ({
+        id: m.id,
+        role: m.role,
+        content: m.content,
+      }));
+      setMessages((prev) => [prev[0], ...history]);
+    }
+  }, []);
+
+  // Sauver l'historique
+  useEffect(() => {
+    if (messages.length > 1) {
+      const chatMessages: ChatMessage[] = messages
+        .filter((m) => !m.isInitial)
+        .map((m) => ({
+          id: m.id,
+          role: m.role,
+          content: m.content,
+          timestamp: new Date().toISOString(),
+        }));
+      Storage.saveChatHistory(chatMessages);
+    }
+  }, [messages]);
+
+  // Charger les voix
+  useEffect(() => {
+    const loadVoices = () => {
+      const v = window.speechSynthesis.getVoices();
+      setVoices(v);
+    };
+
+    loadVoices();
+    if (typeof window !== 'undefined' && window.speechSynthesis.onvoiceschanged !== undefined) {
+      window.speechSynthesis.onvoiceschanged = loadVoices;
+    }
+  }, []);
+
+  // Nettoyage TTS au démontage
+  useEffect(() => {
+    return () => {
+      if (typeof window !== 'undefined') {
+        window.speechSynthesis.cancel();
+      }
+    };
+  }, []);
+
+  // Text-to-Speech
+  const speakText = (text: string, forceGender?: 'male' | 'female') => {
+    if (isMuted || typeof window === 'undefined') return;
+
+    window.speechSynthesis.cancel();
+
+    const textToRead = cleanSpeechText(text);
+    if (!textToRead) return;
+
+    const utterance = new SpeechSynthesisUtterance(textToRead);
+    utterance.lang = 'fr-FR';
+    utterance.rate = 1.1;
+    utterance.pitch = 1.0;
+
+    const genderToUse = forceGender || voiceGender;
+    const frVoices = voices.filter((v) => v.lang.startsWith('fr'));
+    let selectedVoice: SpeechSynthesisVoice | null = null;
+
+    if (genderToUse === 'male') {
+      selectedVoice = frVoices.find(
+        (v) =>
+          v.name.includes('Paul') ||
+          v.name.includes('Thomas') ||
+          v.name.includes('Nicolas') ||
+          v.name.includes('Male')
+      ) || null;
     } else {
-      router.push("/profile/create");
+      selectedVoice = frVoices.find(
+        (v) =>
+          v.name.includes('Google') ||
+          v.name.includes('Amelie') ||
+          v.name.includes('Hortense') ||
+          v.name.includes('Female')
+      ) || null;
+    }
+
+    if (!selectedVoice && frVoices.length > 0) selectedVoice = frVoices[0];
+    if (selectedVoice) utterance.voice = selectedVoice;
+
+    window.speechSynthesis.speak(utterance);
+  };
+
+  // Initialisation SpeechRecognition
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const SpeechRecognition =
+      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) return;
+
+    const recognition = new SpeechRecognition();
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.lang = 'fr-FR';
+
+    recognition.onstart = () => setIsListening(true);
+    recognition.onend = () => setIsListening(false);
+    recognition.onerror = (event: any) => {
+      console.error("SpeechRecognition error:", event.error);
+      setIsListening(false);
+      if (event.error === 'not-allowed') {
+        // Permission micro refusée ou bloquée
+        alert(
+          "L’accès au micro est bloqué ou refusé.\n\n" +
+            "➡ Vérifie les paramètres du navigateur et autorise le micro pour ce site,\n" +
+            "puis recharge la page."
+        );
+      }
+    };
+    recognition.onresult = (event: any) => {
+      const transcript = event.results[0][0].transcript;
+      if (transcript) {
+        sendMessage(transcript);
+      }
+    };
+
+    recognitionRef.current = recognition;
+  }, []);
+
+  // Démarrer l'écoute
+  const startListening = async () => {
+    if (!recognitionRef.current || isListening) return;
+
+    if (typeof window !== 'undefined') {
+      window.speechSynthesis.cancel();
+    }
+
+    try {
+      // IMPORTANT : demande explicite de permission micro
+      await navigator.mediaDevices.getUserMedia({ audio: true });
+      recognitionRef.current.start();
+    } catch (e: any) {
+      console.error("getUserMedia error:", e);
+      if (e.name === 'NotAllowedError' || e.name === 'PermissionDeniedError') {
+        alert(
+          "Accès au micro refusé.\n\n" +
+            "➡ Autorise le micro dans les paramètres de ton navigateur pour parler avec INA."
+        );
+      }
     }
   };
 
-  const handlePrev = () => {
-    if (currentSlide > 0) {
-      setDirection(-1);
-      setCurrentSlide(currentSlide - 1);
+  // Test de voix (optionnel, menu commenté)
+  const testVoice = (gender: 'male' | 'female') => {
+    setVoiceGender(gender);
+    setShowVoiceMenu(false);
+    if (typeof window !== 'undefined') window.speechSynthesis.cancel();
+    setTimeout(() => {
+      speakText("Ceci est ma voix pour INA.", gender);
+    }, 100);
+  };
+
+  const sendMessage = async (text: string) => {
+    if (!text.trim() || isLoading) return;
+
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      role: 'user',
+      content: text.trim(),
+    };
+
+    setMessages((prev) => [...prev, userMessage]);
+    setInput('');
+    setIsLoading(true);
+    setError(null);
+
+    if (typeof window !== 'undefined') window.speechSynthesis.cancel();
+
+    try {
+      let journalContext = '';
+      if (Storage.getJournalAiAccess()) {
+        const journals = Storage.getJournals().slice(0, 3);
+        if (journals.length > 0) {
+          journalContext = journals
+            .map((j) => `Titre: ${j.title}\nContenu: ${j.content}`)
+            .join('\n\n');
+        }
+      }
+
+      const userContext = Storage.getUserContext();
+
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages: [...messages, userMessage],
+          journalContext,
+          userContext,
+        }),
+      });
+
+      if (!response.ok) throw new Error('Erreur de connexion');
+
+      const data = await response.json();
+
+      let assistantText = data.message;
+      let showActions = false;
+      let options: string[] | undefined;
+      let recommendation: Message['recommendation'] | undefined;
+
+      if (assistantText.includes('[SHOW_ACTIONS]')) {
+        showActions = true;
+        assistantText = assistantText.replace('[SHOW_ACTIONS]', '').trim();
+      }
+
+      const optionsMatch = assistantText.match(/\[OPTIONS:(.*?)\]/);
+      if (optionsMatch) {
+        options = optionsMatch[1].split('|').map((opt: string) => opt.trim());
+        assistantText = assistantText.replace(optionsMatch[0], '').trim();
+      }
+
+      const resourceMatch = assistantText.match(/\[RESOURCE:(\d+)\]/);
+      if (resourceMatch) {
+        const id = parseInt(resourceMatch[1]);
+        const res = Storage.getResourceById(id);
+        if (res) {
+          recommendation = {
+            resourceId: res.id,
+            title: res.title,
+            type: res.type,
+          };
+        }
+        assistantText = assistantText.replace(resourceMatch[0], '').trim();
+      }
+
+      const assistantMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content: assistantText,
+        showActionButtons: showActions,
+        customOptions: options,
+        recommendation,
+      };
+
+      setMessages((prev) => [...prev, assistantMessage]);
+      speakText(assistantText);
+    } catch (err) {
+      console.error('Chat error:', err);
+      setError("Désolé, je n'ai pas pu me connecter. Réessaie dans un instant.");
+    } finally {
+      setIsLoading(false);
     }
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    sendMessage(input);
+  };
+
+  const handleBack = () => {
+    if (typeof window !== 'undefined') window.speechSynthesis.cancel();
+    router.back();
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.5 }}
-      className="min-h-screen bg-linear-to-b from-yellow-50 via-white to-green-50 flex flex-col items-center justify-between p-6 relative overflow-hidden"
-      style={{ fontFamily: '"Lexend Deca", sans-serif' }}
-    >
-      <motion.div 
-        animate={{ 
-          y: [0, -10, 0],
-        }}
-        transition={{
-          duration: 4,
-          repeat: Infinity,
-          repeatType: "reverse" as const
-        }}
-        className="absolute top-24 right-12 w-3 h-3 rounded-full bg-blue-400 opacity-60" 
-      />
-      <motion.div 
-        animate={{ 
-          y: [0, 15, 0],
-        }}
-        transition={{
-          duration: 3.5,
-          repeat: Infinity,
-          repeatType: "reverse" as const,
-          delay: 0.5
-        }}
-        className="absolute top-36 right-32 w-2 h-2 rounded-full bg-purple-300 opacity-60" 
-      />
-      <motion.div 
-        animate={{ 
-          scale: [1, 1.2, 1],
-        }}
-        transition={{
-          duration: 3,
-          repeat: Infinity,
-          repeatType: "reverse" as const
-        }}
-        className="absolute bottom-80 right-4 w-2 h-2 rounded-full bg-green-400 opacity-60" 
-      />
-      <motion.div 
-        animate={{ 
-          rotate: 360,
-        }}
-        transition={{
-          duration: 20,
-          repeat: Infinity,
-          ease: "linear"
-        }}
-        className="absolute bottom-72 right-32 w-2.5 h-2.5 rounded-full bg-yellow-400 opacity-60" 
-      />
-      <motion.div 
-        animate={{ 
-          x: [0, 10, 0],
-        }}
-        transition={{
-          duration: 4,
-          repeat: Infinity,
-          repeatType: "reverse" as const
-        }}
-        className="absolute bottom-96 left-16 w-2 h-2 rounded-full bg-pink-300 opacity-60" 
-      />
-      <motion.div 
-        animate={{ 
-          opacity: [0.6, 1, 0.6],
-        }}
-        transition={{
-          duration: 2,
-          repeat: Infinity,
-          repeatType: "reverse" as const
-        }}
-        className="absolute bottom-88 left-32 w-2 h-2 rounded-full bg-blue-300 opacity-60" 
-      />
-      <motion.div 
-        animate={{ 
-          y: [0, -15, 0],
-        }}
-        transition={{
-          duration: 3,
-          repeat: Infinity,
-          repeatType: "reverse" as const,
-          delay: 1
-        }}
-        className="absolute bottom-80 left-6 w-2 h-2 rounded-full bg-orange-400 opacity-60" 
-      />
+    <div className="min-h-screen bg-gradient-to-b from-yellow-50 via-white to-green-50 flex flex-col">
+      {/* Header */}
+      <div className="bg-white border-b border-gray-200 px-4 py-3 flex items-center gap-3 sticky top-0 z-10 shadow-sm relative">
+        <button onClick={handleBack}>
+          <Image src="/arrow-return.svg" alt="Retour" width={24} height={24} />
+        </button>
+        <div className="flex items-center gap-2">
+          <div className="w-10 h-10 bg-[#E86C00] rounded-full flex items-center justify-center">
+            <span className="text-white font-bold text-sm">INA</span>
+          </div>
+          <div>
+            <p className="font-semibold text-gray-900">INA</p>
+            <p className="text-xs text-[#4CAF50]">● En ligne</p>
+          </div>
+        </div>
 
-      <AnimatePresence mode="wait" custom={direction}>
-        <motion.div
-          key={currentSlide}
-          custom={direction}
-          variants={slideVariants}
-          initial="enter"
-          animate="center"
-          exit="exit"
-          className="flex-1 flex flex-col items-center justify-center text-center max-w-md w-full mt-8"
-        >
-          {currentSlide > 0 && (
-            <motion.button
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.3 }}
-              onClick={handlePrev}
-              className="absolute top-8 left-6 hover:opacity-80 transition-opacity"
-              whileTap={{ scale: 0.9 }}
-            >
-              <img src="/arrow-return.svg" alt="Retour" width="28" height="28" />
-            </motion.button>
-          )}
+        {/* Audio controls */}
+        <div className="ml-auto flex gap-2">
+          <div className="relative">{/* menu voix optionnel */}</div>
 
-          <motion.div 
-            className="mb-8 flex items-center justify-center"
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ 
-              type: "spring" as const, 
-              stiffness: 200, 
-              damping: 15,
-              delay: 0.1 
+          <button
+            onClick={() => {
+              const newMuted = !isMuted;
+              setIsMuted(newMuted);
+              if (newMuted && typeof window !== 'undefined') {
+                window.speechSynthesis.cancel();
+              }
             }}
+            className={`p-2 rounded-full transition-colors ${
+              isMuted ? 'bg-gray-100' : 'bg-orange-50'
+            }`}
           >
-            <img
-              src={slide.image}
-              alt={slide.title}
-              width="200"
-              height="200"
-              className="object-contain"
-            />
-          </motion.div>
+            {isMuted ? (
+              <VolumeX size={20} className="text-gray-500" />
+            ) : (
+              <Volume2 size={20} className="text-[#E86C00]" />
+            )}
+          </button>
+        </div>
+      </div>
 
-          <div className="mt-4">
-            <motion.h1
-              key={`title-${currentSlide}`}
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-              className="text-[24px] font-bold text- mb-4 tracking-tight"
-              style={{ color: "#E86C00", fontFamily: "Poppins, sans-serif" }}
+      {/* Messages */}
+      <div className="flex-1 overflow-y-auto px-4 py-6 space-y-6">
+        {messages.map((message) => (
+          <div key={message.id} className="flex flex-col">
+            <div
+              className={`flex ${
+                message.role === 'user' ? 'justify-end' : 'justify-start'
+              }`}
             >
-              {slide.title}
-            </motion.h1>
-
-            {slide.description && (
-              <motion.p
-                key={`desc-${currentSlide}`}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.5, delay: 0.3 }}
-                className="text-[#6E6A7C] text-base leading-relaxed px-4"
+              {message.role === 'assistant' && (
+                <div className="w-8 h-8 bg-[#E86C00] rounded-full flex items-center justify-center mr-2 flex-shrink-0">
+                  <span className="text-white font-bold text-xs">INA</span>
+                </div>
+              )}
+              <div
+                className={`max-w-[75%] px-4 py-3 rounded-2xl whitespace-pre-line shadow-sm ${
+                  message.role === 'user'
+                    ? 'bg-[#00569E] text-white rounded-br-none'
+                    : 'bg-gray-100 text-gray-900 rounded-bl-none'
+                }`}
               >
-                {slide.description}
-              </motion.p>
+                {cleanDisplayText(message.content)}
+
+                {message.role === 'assistant' && (
+                  <button
+                    onClick={() => speakText(message.content)}
+                    className="ml-2 inline-block opacity-50 hover:opacity-100 align-middle"
+                  >
+                    <Volume2 size={14} />
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {message.showActionButtons && (
+              <div className="flex flex-wrap gap-2 mt-3 ml-10 max-w-[85%] animate-in fade-in slide-in-from-top-2 duration-500">
+                <button
+                  onClick={() => router.push('/experts')}
+                  className="px-4 py-2 bg-[#E86C00] text-white rounded-lg font-medium hover:bg-[#d66200] transition-colors shadow-sm text-sm"
+                >
+                  👤 Consultez un expert
+                </button>
+                <button
+                  onClick={() => sendMessage('Je veux continuer')}
+                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors bg-white shadow-sm text-sm"
+                >
+                  💬 Continuer
+                </button>
+              </div>
             )}
 
-            {slide.bullets.length > 0 && (
-              <motion.ul 
-                initial="initial"
-                animate="animate"
-                className="text-left space-y-1 mt-8 px-6"
-              >
-                {slide.bullets.map((bullet, idx) => (
-                  <motion.li 
-                    key={idx} 
-                    custom={idx}
-                    variants={bulletVariants}
-                    className="flex items-start gap-1.5"
+            {message.customOptions && message.customOptions.length > 0 && (
+              <div className="flex flex-wrap gap-2 mt-3 ml-10 max-w-[90%] animate-in fade-in slide-in-from-top-2 duration-500">
+                {message.customOptions.map((option, index) => (
+                  <button
+                    key={index}
+                    onClick={() => {
+                      setMessages((prev) =>
+                        prev.map((m) =>
+                          m.id === message.id ? { ...m, customOptions: undefined } : m
+                        )
+                      );
+                      sendMessage(option);
+                    }}
+                    className="px-4 py-2 bg-white border border-[#E86C00] text-[#E86C00] rounded-full font-medium hover:bg-[#E86C00] hover:text-white transition-all shadow-sm text-sm"
                   >
-                    <span
-                      className="text-xl font-bold"
-                      style={{ color: "#6E6A7C" }}
-                    >
-                      •
-                    </span>
-                    <span className="text-[#6E6A7C] text-sm leading-relaxed">
-                      {bullet}
-                    </span>
-                  </motion.li>
+                    {option}
+                  </button>
                 ))}
-              </motion.ul>
+              </div>
+            )}
+
+            {message.recommendation && (
+              <div className="mt-3 ml-10 animate-in fade-in slide-in-from-top-2 duration-500">
+                <button
+                  onClick={() =>
+                    router.push(`/resources/${message.recommendation?.resourceId}`)
+                  }
+                  className="flex items-center gap-3 px-4 py-3 bg-white border-2 border-primary-blue text-primary-blue rounded-2xl font-bold hover:bg-blue-50 transition-all shadow-sm"
+                >
+                  <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
+                    {message.recommendation.type === 'document' && (
+                      <Image
+                        src="/doc_w.svg"
+                        width={16}
+                        height={16}
+                        alt="doc"
+                        className="invert-0 filter brightness-50"
+                      />
+                    )}
+                    {message.recommendation.type === 'audio' && (
+                      <Image
+                        src="/aud_w.svg"
+                        width={16}
+                        height={16}
+                        alt="audio"
+                        className="invert-0 filter brightness-50"
+                      />
+                    )}
+                    {message.recommendation.type === 'video' && (
+                      <Image
+                        src="/v_w.svg"
+                        width={16}
+                        height={16}
+                        alt="video"
+                        className="invert-0 filter brightness-50"
+                      />
+                    )}
+                  </div>
+                  <div className="text-left">
+                    <p className="text-[10px] uppercase tracking-wider opacity-60">
+                      Recommandation
+                    </p>
+                    <p className="text-sm">Voir : {message.recommendation.title}</p>
+                  </div>
+                  <svg
+                    className="w-5 h-5 ml-auto"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                  >
+                    <path d="M9 18l6-6-6-6" />
+                  </svg>
+                </button>
+              </div>
             )}
           </div>
-        </motion.div>
-      </AnimatePresence>
+        ))}
 
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.5 }}
-        className="w-full max-w-md mb-8"
-      >
-          <motion.button
-            onClick={handleNext}
-            className="w-full text-white font-medium py-4 px-6 rounded-md flex items-center justify-center transition-colors hover:opacity-90 relative"
-            style={{ backgroundColor: "#00569E" }}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
+        {isLoading && (
+          <div className="flex justify-start">
+            <div className="w-8 h-8 bg-[#E86C00] rounded-full flex items-center justify-center mr-2 flex-shrink-0">
+              <span className="text-white font-bold text-xs">INA</span>
+            </div>
+            <div className="max-w-[70%] px-4 py-3 rounded-2xl bg-gray-100 text-gray-900 rounded-bl-none">
+              <div className="flex items-center gap-2">
+                <Loader2 size={16} className="animate-spin text-[#E86C00]" />
+                <span className="text-sm text-gray-600">INA réfléchit...</span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {isListening && (
+          <div className="flex justify-end pr-4">
+            <div className="bg-orange-100 text-[#E86C00] px-4 py-2 rounded-2xl flex items-center gap-2 animate-pulse border border-orange-200">
+              <div className="w-2 h-2 bg-orange-500 rounded-full animate-ping" />
+              <span className="text-xs font-bold uppercase tracking-wider">
+                Écoute en cours...
+              </span>
+            </div>
+          </div>
+        )}
+
+        <div ref={messagesEndRef} />
+      </div>
+
+      {/* Input */}
+      <div className="bg-white border-t border-gray-200 px-4 py-3 sticky bottom-0">
+        <form onSubmit={handleSubmit} className="flex items-center gap-2">
+          <input
+            type="text"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder={isListening ? "Parle maintenant..." : "Message..."}
+            disabled={isLoading || isListening}
+            className="flex-1 px-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:border-[#00569E] focus:ring-1 focus:ring-[#00569E] disabled:bg-gray-100 disabled:cursor-not-allowed text-gray-900"
+          />
+          <button
+            type="button"
+            onClick={startListening}
+            className={`p-3 border rounded-full transition-all ${
+              isListening
+                ? 'bg-orange-500 border-orange-600 text-white shadow-lg scale-110'
+                : 'bg-white border-gray-300 text-gray-600 hover:bg-gray-50'
+            }`}
+            disabled={isLoading}
           >
-            <span className="text-lg">
-              {currentSlide === slides.length - 1 ? "Continuer" : "Suivant"}
-            </span>
-            {currentSlide < slides.length - 1 && (
-              <motion.img
-                src="/arrow-return-white.svg"
-                alt=""
-                width="20"
-                height="20"
-                className="absolute right-6"
-                animate={{ x: [0, 5, 0] }}
-                transition={{
-                  duration: 1.5,
-                  repeat: Infinity,
-                  repeatType: "reverse" as const
-                }}
-              />
-            )}
-          </motion.button>
-
-        {/* Indicateurs de progression */}
-        <motion.div 
-          className="flex justify-center gap-2 mt-4"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.6 }}
-        >
-          {slides.map((_, index) => (
-            <motion.div
-              key={index}
-              className={`h-1 rounded-full ${index === currentSlide ? 'w-8' : 'w-2'}`}
-              style={{
-                backgroundColor: index === currentSlide ? "#00569E" : "#D1D5DB",
-              }}
-              initial={{ width: index === currentSlide ? "2rem" : "0.5rem" }}
-              animate={{ width: index === currentSlide ? "2rem" : "0.5rem" }}
-              transition={{ duration: 0.3 }}
-              whileHover={{ scale: 1.2 }}
-            />
-          ))}
-        </motion.div>
-      </motion.div>
-    </motion.div>
+            <Mic size={20} className={isListening ? 'animate-pulse' : ''} />
+          </button>
+          <button
+            type="submit"
+            disabled={isLoading || isListening || !input.trim()}
+            className="p-3 bg-[#E86C00] rounded-full hover:bg-[#d66200] transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+          >
+            <Send size={20} className="text-white" />
+          </button>
+        </form>
+      </div>
+    </div>
   );
 }

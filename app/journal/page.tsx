@@ -31,9 +31,9 @@ export default function JournalListPage() {
   return (
     <div className="min-h-screen bg-[#FFFFF0] pb-24">
       <div className="px-4 py-4 flex items-center justify-between">
-        <button onClick={() => router.back()} className="p-1">
-          <Image src="/arrow-return.svg" alt="Retour" width={24} height={24} />
-        </button>
+          <button onClick={() => router.back()} className="p-1">
+            <Image src="/arrow-return.svg" alt="Retour" width={24} height={24} />
+          </button>
         <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-full shadow-sm border border-orange-100">
            <span className="text-xs font-bold text-gray-600 uppercase">Accès INA</span>
            <button 

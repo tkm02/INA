@@ -1,86 +1,103 @@
 "use client";
 
-import { useState } from "react";
-import { ChevronLeft, Calendar, Clock, MapPin, Star } from "lucide-react";
 import Search from "@/components/ui/Search";
+import { Calendar, Clock, MapPin } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 const experts = [
   {
     id: 1,
-    name: "Dr. Joseph Brostito",
+    name: "Dr. Koffi Jean-Jacques",
     title: "Psychologue",
-    date: "Sunday, 12 June",
-    time: "11:00 – 12:00 AM",
+    date: "Dimanche, 12 Juin",
+    time: "11:00 – 12:00",
     rating: 4.8,
     reviews: 124,
-    location: "Cocody, Côte d'ivoire",
+    location: "Cocody, Abidjan",
     available: true,
+    image: "/experts/koffi.png",
   },
   {
     id: 2,
-    name: "Dr. Bessie Coleman",
+    name: "Dr. Konan Affoué",
     title: "Psychothérapeute",
-    date: "Sunday, 12 June",
-    time: "11:00 – 12:00 AM",
+    date: "Dimanche, 12 Juin",
+    time: "11:00 – 12:00",
     rating: 4.9,
     reviews: 89,
-    location: "Plateau, Côte d'ivoire",
+    location: "Riviera, Abidjan",
     available: true,
+    image: "/experts/konan.png",
   },
   {
     id: 3,
-    name: "Dr. Bessie Coleman",
+    name: "Dr. Kouassi Yao",
     title: "Psychanalyste",
-    date: "Sunday, 12 June",
-    time: "11:00 – 12:00 AM",
+    date: "Dimanche, 12 Juin",
+    time: "11:00 – 12:00",
     rating: 4.7,
     reviews: 156,
-    location: "Treichville, Côte d'ivoire",
+    location: "Treichville, Abidjan",
     available: false,
+    image: "/experts/kouassi.png",
   },
   {
     id: 4,
-    name: "Dr. Babe Didrikson",
+    name: "Dr. Diallo Aminata",
     title: "Sophrologue",
-    date: "Monday, 13 June",
-    time: "10:00 – 11:00 AM",
+    date: "Lundi, 13 Juin",
+    time: "10:00 – 11:00",
     rating: 4.6,
     reviews: 78,
-    location: "Marcory, Côte d'ivoire",
+    location: "Yopougon, Abidjan",
     available: true,
+    image: "/experts/diallo.png",
   },
 ];
 
 export default function ExpertsPage() {
   const [selectedExpert, setSelectedExpert] = useState<number | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
   const router = useRouter()
+
+  const filteredExperts = experts.filter((expert) => {
+    const query = searchQuery.toLowerCase();
+    return (
+      expert.name.toLowerCase().includes(query) ||
+      expert.title.toLowerCase().includes(query) ||
+      expert.location.toLowerCase().includes(query)
+    );
+  });
 
   return (
     <div className="min-h-screen bg-white">
       <div className="px-4 py-4 mt-1.5">
-       <Image src={"/arrow-return.svg"} alt="retour" width={25} height={25}/>
+       <Image src="/arrow-return.svg" alt="retour" width={25} height={25} onClick={() => router.back()} className="cursor-pointer"/>
       </div>
 
       {/* Search Bar */}
       <div className="px-4">
-        <Search />
+        <Search 
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
       </div>
-
       {/* Experts List */}
       <div className="px-4 pb-20">
-        {experts.map((expert, index) => (
+        {filteredExperts.length > 0 ? (
+          filteredExperts.map((expert, index) => (
           <div key={expert.id} className="mb-4">
             <div className="bg-white border border-gray-200 rounded-md p-4">
               <div className="flex items-start mb-4 gap-3">
-                <div className="w-12 h-12 bg-gray-100 rounded-full shrink-0 flex items-center justify-center">
+                <div className="w-12 h-12 bg-gray-100 rounded-full shrink-0 overflow-hidden flex items-center justify-center">
                   <img
-                    src="/user.svg"
-                    alt="user"
-                    width={40}
-                    height={40}
-                    className="object-contain"
+                    src={expert.image}
+                    alt={expert.name}
+                    width={48}
+                    height={48}
+                    className="object-cover w-full h-full"
                   />
                 </div>
 
@@ -139,11 +156,25 @@ export default function ExpertsPage() {
               </button>
             </div>
 
-            {index < experts.length - 1 && (
+            {index < filteredExperts.length - 1 && (
               <div className="border-t border-gray-200 my-4"></div>
             )}
           </div>
-        ))}
+        ))
+      ) : (
+        <div className="flex flex-col items-center justify-center py-20 text-center">
+          <div className="bg-gray-50 p-6 rounded-full mb-4">
+            <Image src="/search-normal.svg" width={40} height={40} alt="no results" className="opacity-20" />
+          </div>
+          <p className="text-gray-500 font-medium">Aucun expert trouvé pour "{searchQuery}"</p>
+          <button 
+            onClick={() => setSearchQuery("")}
+            className="text-primary-blue text-sm mt-2 font-semibold"
+          >
+            Réinitialiser la recherche
+          </button>
+        </div>
+      )}
       </div>
     </div>
   );

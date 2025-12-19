@@ -4,12 +4,27 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
-  --primary-orange: #E86C00;
-  --primary-blue: #00569E;
-  --primary-light: #8696BB;
+  --primary-orange: #e86c00;
+  --primary-blue: #00569e;
+  --primary-light: #667085;
   --light-bg: #F5F5F5;
   --font-lexend: "Lexend Deca", sans-serif;
   --font-poppins: "Poppins", sans-serif;
+}
+
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 20px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+.animate-slide-up {
+  animation: slide-up 0.3s ease-out;
 }
 
 @theme inline {

@@ -1,6 +1,7 @@
 'use client';
 
-import { ArrowLeft, Mic, Send } from 'lucide-react';
+import { Mic, Send } from 'lucide-react';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
@@ -67,7 +68,7 @@ export default function ChatPage() {
       {/* Header */}
       <div className="bg-white border-b border-gray-200 px-4 py-3 flex items-center gap-3">
         <button onClick={() => router.back()}>
-          <ArrowLeft size={24} className="text-[#E86C00]" />
+          <Image src="/arrow-return.svg" alt="Retour" width={24} height={24} />
         </button>
         <div className="flex items-center gap-2">
           <div className="w-10 h-10 bg-[#E86C00] rounded-full flex items-center justify-center">

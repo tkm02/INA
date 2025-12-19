@@ -1,73 +1,255 @@
 'use client';
 
-import { ArrowLeft, Mic, Send } from 'lucide-react';
-import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { ChatMessage, Storage } from "@/lib/storage";
+import { Loader2, Mic, Send, Volume2, VolumeX } from "lucide-react";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { useEffect, useRef, useState } from 'react';
 
 interface Message {
-  id: number;
-  sender: 'user' | 'ina';
-  text: string;
-  timestamp: string;
+  id: string;
+  role: 'user' | 'assistant';
+  content: string;
+  isInitial?: boolean;
+  showActionButtons?: boolean;
+  customOptions?: string[];
 }
 
-export default function ChatPage() {
+// Fonction utilitaire pour nettoyer le texte affiché (Markdown)
+const cleanDisplayText = (text: string) => {
+  return text.replace(/\*\*/g, '').replace(/__/g, '');
+};
+
+// Fonction utilitaire pour nettoyer le texte lu (Emojis + Markdown)
+const cleanSpeechText = (text: string) => {
+  return text
+    .replace(/\*\*/g, '')
+    .replace(/__/g, '')
+    .replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F1E0}-\u{1F1FF}\u{2702}-\u{27B0}\u{24C2}-\u{1F251}]/gu, '')
+    .replace(/\[.*?\]/g, '') // Retire les tags techniques
+    .trim();
+};
+
+export default function AgentAIPage() {
   const router = useRouter();
   const [messages, setMessages] = useState<Message[]>([
     {
-      id: 1,
-      sender: 'ina',
-      text: "Bonjour 👋\nJe suis ton compagnon d'écoute.\nTu peux parler librement ici.\nComment tu te sens aujourd'hui ?",
-      timestamp: 'Mar 8:21',
-    },
-    {
-      id: 2,
-      sender: 'user',
-      text: "Franchement je me sens fatigué et un peu perdu.",
-      timestamp: '',
-    },
-    {
-      id: 3,
-      sender: 'ina',
-      text: "Merci de me l'avoir dit.\nQuand tu dis perdu, qu'est-ce qui te traverse le plus en ce moment ?",
-      timestamp: '',
-    },
-    {
-      id: 4,
-      sender: 'user',
-      text: "J'ai beaucoup de pression au travail et je dors mal.",
-      timestamp: '',
-    },
-    {
-      id: 5,
-      sender: 'ina',
-      text: "D'accord.\nCe que tu décris est important et mérite d'être suivi sérieusement.",
-      timestamp: '',
+      id: "1",
+      role: "assistant", // Changed from 'ina' to 'assistant'
+      content:
+        "Bonjour ! Je suis INA, ton amie virtuelle. Je suis là pour t'écouter sans jugement. Comment te sens-tu aujourd'hui ?",
+      isInitial: true,
     },
   ]);
-  const [inputText, setInputText] = useState('');
+  const [input, setInput] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  
+  // États audio
+  const [isMuted, setIsMuted] = useState(false);
+  const [voiceGender, setVoiceGender] = useState<'female' | 'male'>('female');
+  const [showVoiceMenu, setShowVoiceMenu] = useState(false);
+  const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
+  
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const handleSend = () => {
-    if (inputText.trim()) {
-      setMessages([
-        ...messages,
-        {
-          id: messages.length + 1,
-          sender: 'user',
-          text: inputText,
-          timestamp: '',
-        },
-      ]);
-      setInputText('');
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  // Load chat history on mount
+  useEffect(() => {
+    const data = Storage.getData();
+    if (data.conversations.messages.length > 0) {
+      // Map Storage format to component format
+      const history: Message[] = data.conversations.messages.map(m => ({
+        id: m.id,
+        role: m.role, // Standardized role mapping
+        content: m.content
+      }));
+      // Preserving the initial greeting
+      setMessages([messages[0], ...history]);
     }
+  }, []);
+
+  // Save chat history whenever messages change
+  useEffect(() => {
+    if (messages.length > 1) {
+      const chatMessages: ChatMessage[] = messages
+        .filter(m => !m.isInitial) // Don't save initial greeting to storage as it's static
+        .map(m => ({
+          id: m.id,
+          role: m.role, // Standardized role mapping
+          content: m.content,
+          timestamp: new Date().toISOString()
+        }));
+      Storage.saveChatHistory(chatMessages);
+    }
+  }, [messages]);
+
+  // Chargement des voix
+  useEffect(() => {
+    const loadVoices = () => {
+      const availableVoices = window.speechSynthesis.getVoices();
+      setVoices(availableVoices);
+    };
+
+    loadVoices();
+    if (typeof window !== 'undefined' && window.speechSynthesis.onvoiceschanged !== undefined) {
+      window.speechSynthesis.onvoiceschanged = loadVoices;
+    }
+  }, []);
+
+  // ✅ NETTOYAGE : Arrêter la voix quand on quitte la page (démontage du composant)
+  useEffect(() => {
+    return () => {
+      if (typeof window !== 'undefined') {
+        window.speechSynthesis.cancel();
+      }
+    };
+  }, []);
+
+  // Fonction de lecture Text-to-Speech améliorée
+  const speakText = (text: string, forceGender?: 'male' | 'female') => {
+    if (isMuted || typeof window === 'undefined') return;
+
+    window.speechSynthesis.cancel();
+
+    const textToRead = cleanSpeechText(text);
+    if (!textToRead) return;
+
+    const utterance = new SpeechSynthesisUtterance(textToRead);
+    utterance.lang = 'fr-FR';
+    utterance.rate = 1.1; 
+    utterance.pitch = 1.0;
+
+    const genderToUse = forceGender || voiceGender;
+    const frVoices = voices.filter(v => v.lang.startsWith('fr'));
+    let selectedVoice = null;
+
+    if (genderToUse === 'male') {
+      selectedVoice = frVoices.find(v => 
+        v.name.includes('Paul') || v.name.includes('Thomas') || v.name.includes('Nicolas') || v.name.includes('Male')
+      );
+    } else {
+      selectedVoice = frVoices.find(v => 
+        v.name.includes('Google') || v.name.includes('Amelie') || v.name.includes('Hortense') || v.name.includes('Female')
+      );
+    }
+
+    if (!selectedVoice && frVoices.length > 0) selectedVoice = frVoices[0];
+    if (selectedVoice) utterance.voice = selectedVoice;
+
+    window.speechSynthesis.speak(utterance);
+  };
+
+  // Test de voix lors du changement
+  const testVoice = (gender: 'male' | 'female') => {
+    setVoiceGender(gender);
+    setShowVoiceMenu(false);
+    // Arrêter toute voix en cours avant de tester
+    if (typeof window !== 'undefined') window.speechSynthesis.cancel();
+    
+    setTimeout(() => {
+      speakText("Ceci est ma voix pour INA.", gender);
+    }, 100);
+  };
+
+  const sendMessage = async (text: string) => {
+    if (!text.trim() || isLoading) return;
+
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      role: 'user',
+      content: text.trim(),
+    };
+
+    setMessages((prev) => [...prev, userMessage]);
+    setInput('');
+    setIsLoading(true);
+    setError(null);
+
+    // Arrêter la voix si l'utilisateur parle
+    if (typeof window !== 'undefined') window.speechSynthesis.cancel();
+
+    try {
+      // Fetch journal context if allowed
+      let journalContext = '';
+      if (Storage.getJournalAiAccess()) {
+        const journals = Storage.getJournals().slice(0, 3); // Last 3 entries for context
+        if (journals.length > 0) {
+          journalContext = journals.map(j => `Titre: ${j.title}\nContenu: ${j.content}`).join('\n\n');
+        }
+      }
+
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          messages: [...messages, userMessage],
+          journalContext // Send context to API
+        }),
+      });
+
+      if (!response.ok) throw new Error('Erreur de connexion');
+
+      const data = await response.json();
+      
+      let assistantText = data.message;
+      let showActions = false;
+      let options: string[] | undefined = undefined;
+
+      if (assistantText.includes('[SHOW_ACTIONS]')) {
+        showActions = true;
+        assistantText = assistantText.replace('[SHOW_ACTIONS]', '').trim();
+      }
+
+      const optionsMatch = assistantText.match(/\[OPTIONS:(.*?)\]/);
+      if (optionsMatch) {
+        options = optionsMatch[1].split('|').map((opt: string) => opt.trim());
+        assistantText = assistantText.replace(optionsMatch[0], '').trim();
+      }
+
+      const assistantMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content: assistantText,
+        showActionButtons: showActions,
+        customOptions: options,
+      };
+
+      setMessages((prev) => [...prev, assistantMessage]);
+      speakText(assistantText);
+
+    } catch (err) {
+      console.error('Chat error:', err);
+      setError('Désolé, je n\'ai pas pu me connecter. Réessaie dans un instant.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    sendMessage(input);
+  };
+
+  // ✅ Fonction de retour améliorée (coupe le son + navigation)
+  const handleBack = () => {
+    if (typeof window !== 'undefined') window.speechSynthesis.cancel();
+    router.back();
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-yellow-50 via-white to-green-50 flex flex-col">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200 px-4 py-3 flex items-center gap-3">
-        <button onClick={() => router.back()}>
-          <ArrowLeft size={24} className="text-[#E86C00]" />
+      <div className="bg-white border-b border-gray-200 px-4 py-3 flex items-center gap-3 sticky top-0 z-10 shadow-sm relative">
+        <button onClick={handleBack}>
+          <Image src="/arrow-return.svg" alt="Retour" width={24} height={24} />
         </button>
         <div className="flex items-center gap-2">
           <div className="w-10 h-10 bg-[#E86C00] rounded-full flex items-center justify-center">
@@ -78,67 +260,161 @@ export default function ChatPage() {
             <p className="text-xs text-[#4CAF50]">● En ligne</p>
           </div>
         </div>
-        <div className="ml-auto text-xs text-gray-500">Mar 8:21</div>
+        
+        {/* Contrôles Audio */}
+        <div className="ml-auto flex gap-2">
+          {/* Menu Voix */}
+          <div className="relative">
+            {/* <button 
+              onClick={() => setShowVoiceMenu(!showVoiceMenu)}
+              className="p-2 bg-gray-100 rounded-full hover:bg-gray-200 transition-colors"
+            >
+              <Settings size={20} className="text-gray-600" />
+            </button>
+            
+            {showVoiceMenu && (
+              <div className="absolute right-0 top-12 bg-white shadow-xl rounded-xl p-2 w-48 border border-gray-100 animate-in fade-in slide-in-from-top-2 z-50">
+                <p className="text-xs font-bold text-gray-400 uppercase mb-2 px-2 tracking-wider">Voix d'INA</p>
+                <button 
+                  onClick={() => testVoice('female')}
+                  className={`w-full text-left px-3 py-2.5 rounded-lg text-sm flex items-center justify-between mb-1 transition-colors ${voiceGender === 'female' ? 'bg-orange-50 text-[#E86C00] font-medium' : 'hover:bg-gray-50 text-gray-700'}`}
+                >
+                  <span>👩 Femme</span>
+                  {voiceGender === 'female' && <Check size={14} />}
+                </button>
+                <button 
+                  onClick={() => testVoice('male')}
+                  className={`w-full text-left px-3 py-2.5 rounded-lg text-sm flex items-center justify-between transition-colors ${voiceGender === 'male' ? 'bg-orange-50 text-[#E86C00] font-medium' : 'hover:bg-gray-50 text-gray-700'}`}
+                >
+                  <span>👨 Homme</span>
+                  {voiceGender === 'male' && <Check size={14} />}
+                </button>
+              </div>
+            )} */}
+          </div>
+
+          {/* Mute / Unmute */}
+          <button 
+            onClick={() => {
+              const newMuted = !isMuted;
+              setIsMuted(newMuted);
+              if (newMuted) window.speechSynthesis.cancel();
+            }}
+            className={`p-2 rounded-full transition-colors ${isMuted ? 'bg-gray-100' : 'bg-orange-50'}`}
+          >
+            {isMuted ? <VolumeX size={20} className="text-gray-500" /> : <Volume2 size={20} className="text-[#E86C00]" />}
+          </button>
+        </div>
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-4 py-6 space-y-4">
+      <div className="flex-1 overflow-y-auto px-4 py-6 space-y-6">
         {messages.map((message) => (
-          <div
-            key={message.id}
-            className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
-          >
-            {message.sender === 'ina' && (
-              <div className="w-8 h-8 bg-[#E86C00] rounded-full flex items-center justify-center mr-2 flex-shrink-0">
-                <span className="text-white font-bold text-xs">INA</span>
-              </div>
-            )}
-            <div
-              className={`max-w-[70%] px-4 py-3 rounded-2xl whitespace-pre-line ${
-                message.sender === 'user'
+          <div key={message.id} className="flex flex-col">
+            <div className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+              {message.role === 'assistant' && (
+                <div className="w-8 h-8 bg-[#E86C00] rounded-full flex items-center justify-center mr-2 flex-shrink-0">
+                  <span className="text-white font-bold text-xs">INA</span>
+                </div>
+              )}
+              <div className={`max-w-[75%] px-4 py-3 rounded-2xl whitespace-pre-line shadow-sm ${
+                message.role === 'user'
                   ? 'bg-[#00569E] text-white rounded-br-none'
                   : 'bg-gray-100 text-gray-900 rounded-bl-none'
-              }`}
-            >
-              {message.text}
+              }`}>
+                {cleanDisplayText(message.content)}
+                
+                {message.role === 'assistant' && (
+                  <button 
+                    onClick={() => speakText(message.content)}
+                    className="ml-2 inline-block opacity-50 hover:opacity-100 align-middle"
+                  >
+                    <Volume2 size={14} />
+                  </button>
+                )}
+              </div>
             </div>
+
+            {/* Boutons Actions */}
+            {message.showActionButtons && (
+              <div className="flex flex-wrap gap-2 mt-3 ml-10 max-w-[85%] animate-in fade-in slide-in-from-top-2 duration-500">
+                <button 
+                  onClick={() => router.push('/experts')}
+                  className="px-4 py-2 bg-[#E86C00] text-white rounded-lg font-medium hover:bg-[#d66200] transition-colors shadow-sm text-sm"
+                >
+                  👤 Consultez un expert
+                </button>
+                <button 
+                  onClick={() => sendMessage("Je veux continuer")}
+                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors bg-white shadow-sm text-sm"
+                >
+                  💬 Continuer
+                </button>
+              </div>
+            )}
+
+            {/* Boutons Quiz */}
+            {message.customOptions && message.customOptions.length > 0 && (
+              <div className="flex flex-wrap gap-2 mt-3 ml-10 max-w-[90%] animate-in fade-in slide-in-from-top-2 duration-500">
+                {message.customOptions.map((option, index) => (
+                  <button
+                    key={index}
+                    onClick={() => {
+                      setMessages(prev => prev.map(m => 
+                        m.id === message.id ? { ...m, customOptions: undefined } : m
+                      ));
+                      sendMessage(option);
+                    }}
+                    className="px-4 py-2 bg-white border border-[#E86C00] text-[#E86C00] rounded-full font-medium hover:bg-[#E86C00] hover:text-white transition-all shadow-sm text-sm"
+                  >
+                    {option}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         ))}
-
-        {/* Action Buttons */}
-        <div className="flex gap-2 pt-4">
-          <button className="flex-1 px-4 py-3 bg-[#E86C00] text-white rounded-lg font-medium flex items-center justify-center gap-2">
-            <span>👤</span>
-            Consultez un expert
-          </button>
-          <button className="flex-1 px-4 py-3 border-2 border-gray-300 text-gray-700 rounded-lg font-medium flex items-center justify-center gap-2">
-            <span>💬</span>
-            Continuer
-          </button>
-        </div>
+        {isLoading && (
+          <div className="flex justify-start">
+             <div className="w-8 h-8 bg-[#E86C00] rounded-full flex items-center justify-center mr-2 flex-shrink-0">
+               <span className="text-white font-bold text-xs">INA</span>
+             </div>
+             <div className="max-w-[70%] px-4 py-3 rounded-2xl bg-gray-100 text-gray-900 rounded-bl-none">
+               <div className="flex items-center gap-2">
+                 <Loader2 size={16} className="animate-spin text-[#E86C00]" />
+                 <span className="text-sm text-gray-600">INA réfléchit...</span>
+               </div>
+             </div>
+          </div>
+        )}
+        <div ref={messagesEndRef} />
       </div>
 
-      {/* Input */}
-      <div className="bg-white border-t border-gray-200 px-4 py-3">
-        <div className="flex items-center gap-2">
+      <div className="bg-white border-t border-gray-200 px-4 py-3 sticky bottom-0">
+        <form onSubmit={handleSubmit} className="flex items-center gap-2">
           <input
             type="text"
-            value={inputText}
-            onChange={(e) => setInputText(e.target.value)}
-            onKeyPress={(e) => e.key === 'Enter' && handleSend()}
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
             placeholder="Message..."
-            className="flex-1 px-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:border-[#00569E]"
+            disabled={isLoading}
+            className="flex-1 px-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:border-[#00569E] focus:ring-1 focus:ring-[#00569E] disabled:bg-gray-100 disabled:cursor-not-allowed text-gray-900"
           />
-          <button className="p-3 bg-white border border-gray-300 rounded-full">
+          <button 
+            type="button"
+            className="p-3 bg-white border border-gray-300 rounded-full hover:bg-gray-50 transition-colors"
+            disabled={isLoading}
+          >
             <Mic size={20} className="text-gray-600" />
           </button>
           <button
-            onClick={handleSend}
-            className="p-3 bg-[#E86C00] rounded-full"
+            type="submit"
+            disabled={isLoading || !input.trim()}
+            className="p-3 bg-[#E86C00] rounded-full hover:bg-[#d66200] transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
           >
             <Send size={20} className="text-white" />
           </button>
-        </div>
+        </form>
       </div>
     </div>
   );

@@ -1,182 +1,237 @@
-'use client';
+"use client";
 
-import { BottomNav } from '@/components/ui/BottomNav';
-import { MessageCircle, Search, Settings, User } from 'lucide-react';
-import { useState } from 'react';
+import BottomNavigation from "@/components/ui/BottomNav";
+import Search from "@/components/ui/Search";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 
-const moodEmojis = [
-  { emoji: '😔', label: 'Pas bien', color: '#E86C00' },
-  { emoji: '😊', label: 'Bien', color: '#4CAF50' },
-  { emoji: '😐', label: 'Moyen', color: '#FFC107' },
-  { emoji: '😄', label: 'Mal', color: '#2196F3' },
-  { emoji: '🖤', label: 'Très mal', color: '#000000' },
+const moodOptions = [
+  { label: "Très bien", emoji: "😄" },
+  { label: "Bien", emoji: "😊" },
+  { label: "Moyen", emoji: "😐" },
+  { label: "Mal", emoji: "😔" },
+  { label: "Très mal", emoji: "🖤" },
 ];
 
-const moodData = [
-  { day: 'Lun', value: 3, color: '#2196F3' },
-  { day: 'Mar', value: 2, color: '#4CAF50' },
-  { day: 'Mer', value: 1, color: '#FFC107' },
-  { day: 'Jeu', value: 4, color: '#2196F3' },
-  { day: 'Ven', value: 5, color: '#E86C00' },
-  { day: 'Sam', value: 3, color: '#2196F3' },
-  { day: 'Dim', value: 2, color: '#4CAF50' },
+const dailyMoodData = [
+  { day: "Lun", color: "bg-[#4CAF50]", height: "h-16" },
+  { day: "Mar", color: "bg-[#FFC107]", height: "h-12" },
+  { day: "Mer", color: "bg-[#FF9800]", height: "h-20" },
+  { day: "Jeu", color: "bg-[#F44336]", height: "h-8" },
+  { day: "Ven", color: "bg-[#4CAF50]", height: "h-14" },
+  { day: "Sam", color: "bg-[#2196F3]", height: "h-10" },
+  { day: "Dim", color: "bg-[#FFC107]", height: "h-18" },
 ];
 
 export default function HomePage() {
   const [selectedMood, setSelectedMood] = useState<number | null>(null);
-
-  const maxValue = Math.max(...moodData.map(d => d.value));
+  const router = useRouter();
 
   return (
-    <div className="min-h-screen bg-white pb-20">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-200 px-6 py-4">
-        <div className="flex items-center justify-between">
+    <div className="min-h-screen bg-white">
+      <div className="bg-white px-4 pt-6 pb-4 border-b border-gray-100">
+        <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
-              <User size={20} className="text-gray-600" />
+            <div className="w-15 h-15 bg-white p-2 border-3 border-primary-orange rounded-full flex items-center justify-center">
+              <span className="text-gray-600 font-medium">P</span>
             </div>
             <div>
               <p className="text-sm text-gray-500">Bonjour !</p>
-              <p className="font-semibold text-gray-900">Pseudo</p>
+              <p className="font-semibold text-gray-900 text-lg">Pseudo</p>
             </div>
           </div>
-          <button className="p-2">
-            <Settings size={24} className="text-gray-600" />
+          <button className="p-1">
+            <Image
+              src={"/notification.svg"}
+              width={25}
+              height={25}
+              alt="notification"
+            />
           </button>
         </div>
       </div>
 
-      {/* Mood Tracker */}
-      <div className="px-6 py-6">
-        <p className="text-center text-gray-700 mb-4">Comment vous vous sentez aujourd'hui ?</p>
-        <div className="flex justify-around items-center mb-6">
-          {moodEmojis.map((mood, idx) => (
-            <button
-              key={idx}
-              onClick={() => setSelectedMood(idx)}
-              className={`flex flex-col items-center gap-1 transition-transform ${
-                selectedMood === idx ? 'scale-110' : ''
-              }`}
-            >
-              <div className="text-3xl">{mood.emoji}</div>
-              <span className="text-xs text-gray-600">{mood.label}</span>
-            </button>
-          ))}
+      <div className="px-4 py-6">
+        <div className="w-full h-[170] p-4 rounded-md bg-primary-blue flex flex-col items-center">
+          <h2 className="text-center text-white mb-6 text-sm font-medium">
+            Comment vous vous sentez aujourd'hui ?
+          </h2>
+          <div className="flex justify-between items-center w-full">
+            {moodOptions.map((mood, idx) => (
+              <button
+                key={idx}
+                onClick={() => setSelectedMood(idx)}
+                className={`flex flex-col items-center gap-2 transition-all ${
+                  selectedMood === idx ? "scale-110" : ""
+                }`}
+              >
+                <div className="w-15 h-15 bg-white rounded-full flex items-center justify-center mb-1">
+                  <div className="text-3xl">{mood.emoji}</div>
+                </div>
+                <span className="text-xs text-[#FFD7E4] font-medium">
+                  {mood.label}
+                </span>
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Search Expert */}
-        <div className="relative">
-          <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-          <input
-            type="text"
-            placeholder="Rechercher un expert"
-            className="w-full pl-12 pr-4 py-3 border-2 border-[#00569E] rounded-full focus:outline-none focus:border-[#00569E]"
-          />
-        </div>
-      </div>
+        <Search />
 
-      {/* Quick Actions */}
-      <div className="px-6 grid grid-cols-4 gap-4 mb-8">
-        <button className="flex flex-col items-center gap-2">
-          <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-            <span className="text-2xl">📖</span>
-          </div>
-          <span className="text-xs text-gray-700">Journal</span>
-        </button>
-        <button className="flex flex-col items-center gap-2">
-          <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-            <span className="text-2xl">👥</span>
-          </div>
-          <span className="text-xs text-gray-700">Experts</span>
-        </button>
-        <button className="flex flex-col items-center gap-2">
-          <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-            <span className="text-2xl">📅</span>
-          </div>
-          <span className="text-xs text-gray-700">RDV</span>
-        </button>
-        <button className="flex flex-col items-center gap-2">
-          <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-            <span className="text-2xl">📚</span>
-          </div>
-          <span className="text-xs text-gray-700">Ressources</span>
-        </button>
-      </div>
-
-      {/* Diagnostic Section */}
-      <div className="px-6 mb-8">
-        <div className="flex items-center gap-2 mb-4">
-          <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-            <span className="text-xl">🩺</span>
-          </div>
-          <span className="font-semibold text-gray-900">Diagnostic</span>
-        </div>
-        <div className="bg-blue-50 border-l-4 border-[#00569E] p-4 rounded-r-lg">
-          <p className="text-sm text-gray-700 mb-2">
-            Besoin d'un coup de pouce ou simplement d'échanger ?
-          </p>
-          <p className="text-sm text-gray-700 mb-3">
-            INA est là pour vous écouter, vous guider et répondre à vos questions. À votre rythme.
-          </p>
-          <button className="text-[#00569E] text-sm font-medium flex items-center gap-1">
-            <MessageCircle size={16} />
-            Démarrer une discussion avec INA
+        {/* Quick Actions */}
+        <div className="grid grid-cols-4 gap-4 mb-8">
+          <button
+            onClick={() => router.push("/journal")}
+            className="flex flex-col items-center gap-2"
+          >
+            <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center shadow">
+              <img
+                src="/journal-icon.svg"
+                alt="Journal"
+                width={24}
+                height={24}
+              />
+            </div>
+            <span className="text-xs text-primary-light font-medium">
+              Journal
+            </span>
+          </button>
+          <button
+            onClick={() => router.push("/experts")}
+            className="flex flex-col items-center gap-2"
+          >
+            <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center shadow">
+              <img src="/experts.svg" alt="Experts" width={24} height={24} />
+            </div>
+            <span className="text-xs text-primary-light font-medium">
+              Experts
+            </span>
+          </button>
+          <button
+            onClick={() => router.push("/appointments")}
+            className="flex flex-col items-center gap-2"
+          >
+            <div className="w-20 h-20 shadow bg-white rounded-full flex items-center justify-center">
+              <img src="/rdv.svg" alt="RDV" width={24} height={24} />
+            </div>
+            <span className="text-xs text-primary-light font-medium">RDV</span>
+          </button>
+          <button
+            onClick={() => router.push("/resources")}
+            className="flex flex-col items-center gap-2"
+          >
+            <div className="w-20 h-20 shadow bg-white rounded-full flex items-center justify-center">
+              <img
+                src="/ressource.svg"
+                alt="Ressources"
+                width={24}
+                height={24}
+              />
+            </div>
+            <span className="text-xs text-primary-light font-medium">
+              Ressources
+            </span>
+          </button>
+          <button
+            onClick={() => router.push("/diagnostic")}
+            className="flex flex-col items-center gap-2"
+          >
+            <div className="w-20 h-20 shadow bg-white rounded-full flex items-center justify-center">
+              <img
+                src="/dianostic.svg"
+                alt="Diagnostic"
+                width={24}
+                height={24}
+              />
+            </div>
+            <span className="text-xs text-primary-light font-medium">
+              Diagnostic
+            </span>
           </button>
         </div>
-      </div>
 
-      {/* Mood Graph */}
-      <div className="px-6 mb-8">
-        <h3 className="font-semibold text-gray-900 mb-4">Mon Bilan Journalier</h3>
-        <div className="bg-white border border-gray-200 rounded-2xl p-6">
-          <div className="flex items-end justify-between h-40 gap-2">
-            {moodData.map((data, idx) => (
-              <div key={idx} className="flex-1 flex flex-col items-center gap-2">
-                <div className="flex-1 flex items-end w-full">
-                  <div
-                    className="w-full rounded-t-lg transition-all"
-                    style={{
-                      height: `${(data.value / maxValue) * 100}%`,
-                      backgroundColor: data.color,
-                    }}
-                  />
-                </div>
-                <span className="text-xs text-gray-600">{data.day}</span>
+        {/* Diagnostic Section */}
+        <div className="mb-8">
+          <div className="bg-blue-50 border-l-4 border-[#00569E] p-4 rounded-r-lg">
+            <p className="text-sm text-gray-700 mb-1">
+              Besoin d'un coup de pouce ou simplement d'échanger ?
+            </p>
+            <p className="text-sm font-medium text-gray-800 mb-3">
+              <strong>
+                INA est là pour vous écouter, vous guider et répondre à vos
+                questions, à votre rythme.
+              </strong>
+            </p>
+            <p className="text-sm font-medium text-gray-800 mb-4">
+              <strong>
+                N'hésitez pas à engager la conversation, c'est simple et sans
+                engagement.
+              </strong>
+            </p>
+            <button className="flex items-center gap-2 text-[#00569E] font-medium text-sm">
+              <div className="w-6 h-6 bg-[#00569E] rounded-full flex items-center justify-center">
+                <span className="text-white text-xs">✓</span>
               </div>
-            ))}
-          </div>
-          <div className="mt-4 flex justify-end">
-            <button className="text-[#00569E] text-sm font-medium">Famille</button>
+              Démarrer une discussion avec <strong>INA</strong>
+            </button>
           </div>
         </div>
 
-        {/* Legend */}
-        <div className="mt-4 flex flex-wrap gap-3 justify-center">
-          <div className="flex items-center gap-1">
-            <div className="w-3 h-3 rounded-full bg-[#2196F3]" />
-            <span className="text-xs text-gray-600">BLEU</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <div className="w-3 h-3 rounded-full bg-[#4CAF50]" />
-            <span className="text-xs text-gray-600">VERT</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <div className="w-3 h-3 rounded-full bg-[#FFC107]" />
-            <span className="text-xs text-gray-600">JAUNE</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <div className="w-3 h-3 rounded-full bg-[#E86C00]" />
-            <span className="text-xs text-gray-600">ORANGE</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <div className="w-3 h-3 rounded-full bg-[#000000]" />
-            <span className="text-xs text-gray-600">ROUGE</span>
+        {/* Daily Mood Graph */}
+        <div className="mb-8">
+          <h3 className="font-semibold text-gray-900 text-lg mb-4">
+            Mon Bilan Journalier
+          </h3>
+          <div className="bg-white border border-gray-200 rounded-2xl p-6">
+            {/* Graph */}
+            <div className="flex items-end justify-between h-48 mb-8">
+              {dailyMoodData.map((data, idx) => (
+                <div
+                  key={idx}
+                  className="flex flex-col items-center gap-3 flex-1"
+                >
+                  <div className="flex flex-col items-center justify-end h-40">
+                    <div
+                      className={`${data.color} ${data.height} w-8 rounded-t-lg`}
+                    ></div>
+                  </div>
+                  <span className="text-xs text-gray-600 font-medium">
+                    {data.day}
+                  </span>
+                </div>
+              ))}
+            </div>
+
+            {/* Color Legend */}
+            <div className="flex justify-between items-center">
+              <div className="flex flex-wrap gap-3">
+                <div className="flex items-center gap-1">
+                  <div className="w-3 h-3 rounded-full bg-[#4CAF50]" />
+                  <span className="text-xs text-gray-600">VERT</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <div className="w-3 h-3 rounded-full bg-[#FFC107]" />
+                  <span className="text-xs text-gray-600">JAUNE</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <div className="w-3 h-3 rounded-full bg-[#FF9800]" />
+                  <span className="text-xs text-gray-600">ORANGE</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <div className="w-3 h-3 rounded-full bg-[#F44336]" />
+                  <span className="text-xs text-gray-600">ROUGE</span>
+                </div>
+              </div>
+              <button className="text-[#00569E] text-sm font-medium">
+                Acceuil
+              </button>
+            </div>
           </div>
         </div>
       </div>
-
-      <BottomNav />
+      <BottomNavigation />
     </div>
   );
 }

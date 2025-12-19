@@ -1,45 +1,56 @@
 'use client';
 
-import { BookOpen, Calendar, Home, Users } from 'lucide-react';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import React from 'react';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 
-interface NavItem {
-  href: string;
-  icon: React.ReactNode;
-  label: string;
-}
+type TabId = 'home' | 'forum' | 'agent-ai' | 'parametres';
+type RoutePath = '/home' | '/forum' | '/agent-ai' | '/parametres';
 
-const navItems: NavItem[] = [
-  { href: '/home', icon: <Home size={24} />, label: 'Accueil' },
-  { href: '/experts', icon: <Users size={24} />, label: 'Experts' },
-  { href: '/rdv', icon: <Calendar size={24} />, label: 'RDV' },
-  { href: '/resources', icon: <BookOpen size={24} />, label: 'Ressources' },
-];
+export default function BottomNavigation() {
+  const router = useRouter();
+  const [activeTab, setActiveTab] = useState<TabId>('home');
 
-export const BottomNav: React.FC = () => {
-  const pathname = usePathname();
+  const handleNavigation = (tab: TabId, route: RoutePath) => {
+    setActiveTab(tab);
+    router.push(route);
+  };
+
+  const tabs: Array<{id: TabId, label: string, icon: string, route: RoutePath}> = [
+    { id: 'home', label: 'Acceuil', icon: '/home_.svg', route: '/home' },
+    { id: 'forum', label: 'Forum', icon: '/forum.svg', route: '/forum' },
+    { id: 'agent-ai', label: 'Agent AI', icon: '/agent.svg', route: '/agent-ai' },
+    { id: 'parametres', label: 'Paramètres', icon: '/profile.svg', route: '/parametres' },
+  ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-3 z-50">
-      <div className="flex justify-around items-center max-w-md mx-auto">
-        {navItems.map((item) => {
-          const isActive = pathname === item.href;
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`flex flex-col items-center gap-1 transition-colors ${
-                isActive ? 'text-[#00569E]' : 'text-gray-500'
-              }`}
-            >
-              {item.icon}
-              <span className="text-xs font-medium">{item.label}</span>
-            </Link>
-          );
-        })}
+    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-3">
+      <div className="grid grid-cols-4 gap-4">
+        {tabs.map((tab) => (
+          <button 
+            key={tab.id}
+            onClick={() => handleNavigation(tab.id, tab.route)}
+            className="flex flex-col items-center gap-1"
+          >
+            <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+              activeTab === tab.id ? 'bg-[#00569E]' : 'bg-gray-100'
+            }`}>
+              <img 
+                src={tab.icon} 
+                alt={tab.label} 
+                width={20} 
+                height={20} 
+                className={activeTab === tab.id ? 'invert brightness-0' : ''}
+                style={activeTab === tab.id ? { filter: 'brightness(0) invert(1)' } : {}}
+              />
+            </div>
+            <span className={`text-xs font-medium ${
+              activeTab === tab.id ? 'text-[#00569E]' : 'text-gray-500'
+            }`}>
+              {tab.label}
+            </span>
+          </button>
+        ))}
       </div>
-    </nav>
+    </div>
   );
-};
+}

@@ -1,123 +1,148 @@
-'use client';
+"use client";
 
-import { ArrowLeft, Search } from 'lucide-react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useState } from "react";
+import { ChevronLeft, Calendar, Clock, MapPin, Star } from "lucide-react";
+import Search from "@/components/ui/Search";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
 
-interface Expert {
-  id: number;
-  name: string;
-  title: string;
-  rating: number;
-  reviews: number;
-  image: string;
-  verified: boolean;
-}
-
-const experts: Expert[] = [
+const experts = [
   {
     id: 1,
-    name: 'Dr. Joseph Brostito',
-    title: 'Psychologue',
+    name: "Dr. Joseph Brostito",
+    title: "Psychologue",
+    date: "Sunday, 12 June",
+    time: "11:00 – 12:00 AM",
     rating: 4.8,
-    reviews: 127,
-    image: '👨‍⚕️',
-    verified: true,
+    reviews: 124,
+    location: "Cocody, Côte d'ivoire",
+    available: true,
   },
   {
     id: 2,
-    name: 'Dr. Bessie Coleman',
-    title: 'Psychothérapeute',
+    name: "Dr. Bessie Coleman",
+    title: "Psychothérapeute",
+    date: "Sunday, 12 June",
+    time: "11:00 – 12:00 AM",
     rating: 4.9,
-    reviews: 203,
-    image: '👩‍⚕️',
-    verified: true,
+    reviews: 89,
+    location: "Plateau, Côte d'ivoire",
+    available: true,
   },
   {
     id: 3,
-    name: 'Dr. Bessie Coleman',
-    title: 'Psychanalyste',
+    name: "Dr. Bessie Coleman",
+    title: "Psychanalyste",
+    date: "Sunday, 12 June",
+    time: "11:00 – 12:00 AM",
     rating: 4.7,
     reviews: 156,
-    image: '👩‍⚕️',
-    verified: true,
+    location: "Treichville, Côte d'ivoire",
+    available: false,
   },
   {
     id: 4,
-    name: 'Dr. Babe Didrikson',
-    title: 'Sophrologue',
+    name: "Dr. Babe Didrikson",
+    title: "Sophrologue",
+    date: "Monday, 13 June",
+    time: "10:00 – 11:00 AM",
     rating: 4.6,
-    reviews: 89,
-    image: '👩‍⚕️',
-    verified: true,
+    reviews: 78,
+    location: "Marcory, Côte d'ivoire",
+    available: true,
   },
 ];
 
 export default function ExpertsPage() {
-  const router = useRouter();
-  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedExpert, setSelectedExpert] = useState<number | null>(null);
+  const router = useRouter()
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-yellow-50 via-white to-green-50 pb-20">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-200 px-4 py-3 flex items-center gap-3">
-        <button onClick={() => router.back()}>
-          <ArrowLeft size={24} className="text-[#E86C00]" />
-        </button>
-        <h1 className="text-lg font-semibold text-gray-900">Experts</h1>
+    <div className="min-h-screen bg-white">
+      <div className="px-4 py-4 mt-1.5">
+       <Image src={"/arrow-return.svg"} alt="retour" width={25} height={25}/>
       </div>
 
-      {/* Search */}
-      <div className="px-4 py-4">
-        <div className="relative">
-          <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Rechercher un expert"
-            className="w-full pl-12 pr-4 py-3 border-2 border-gray-300 rounded-full focus:outline-none focus:border-[#00569E]"
-          />
-        </div>
+      {/* Search Bar */}
+      <div className="px-4">
+        <Search />
       </div>
 
-      {/* Expert List */}
-      <div className="px-4 space-y-4">
-        {experts.map((expert) => (
-          <Link
-            key={expert.id}
-            href={`/experts/${expert.id}`}
-            className="block bg-white rounded-2xl p-4 border border-gray-200 hover:border-[#00569E] transition-colors"
-          >
-            <div className="flex items-start gap-4">
-              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center text-3xl flex-shrink-0">
-                {expert.image}
+      {/* Experts List */}
+      <div className="px-4 pb-20">
+        {experts.map((expert, index) => (
+          <div key={expert.id} className="mb-4">
+            <div className="bg-white border border-gray-200 rounded-md p-4">
+              <div className="flex items-start mb-4 gap-3">
+                <div className="w-12 h-12 bg-gray-100 rounded-full shrink-0 flex items-center justify-center">
+                  <img
+                    src="/user.svg"
+                    alt="user"
+                    width={40}
+                    height={40}
+                    className="object-contain"
+                  />
+                </div>
+
+                <div className="flex-1 flex items-start ">
+                  <div>
+                    <h3 className="font-bold text-gray-900 text-lg">
+                       {expert.name}
+                    </h3>
+                    <p className="text-gray-600 text-sm mt-1">{expert.title}</p>
+                  </div>
+
+                  <div className="shrink-0 ml-2 relative top-1">
+                    <img
+                      src="/verify.svg"
+                      width={20}
+                      height={20}
+                      alt="verify"
+                    />
+                  </div>
+                </div>
               </div>
-              <div className="flex-1">
+
+              {/* Date and Time */}
+              <div className="flex items-center gap-4 mb-4">
                 <div className="flex items-center gap-2">
-                  <h3 className="font-semibold text-gray-900">{expert.name}</h3>
-                  {expert.verified && (
-                    <span className="text-[#00569E]">✓</span>
-                  )}
+                  <Calendar size={16} className="text-gray-400" />
+                  <span className="text-gray-700 text-sm font-medium">
+                    {expert.date}
+                  </span>
                 </div>
-                <p className="text-sm text-gray-600 mb-2">{expert.title}</p>
-                <div className="flex items-center gap-4 text-sm">
-                  <div className="flex items-center gap-1">
-                    <span className="text-gray-500">📅</span>
-                    <span className="text-gray-600">Sunday, 12 June</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <span className="text-gray-500">🕐</span>
-                    <span className="text-gray-600">11:00 - 12:00 AM</span>
-                  </div>
+                <div className="flex items-center gap-2">
+                  <Clock size={16} className="text-gray-400" />
+                  <span className="text-gray-700 text-sm font-medium">
+                    {expert.time}
+                  </span>
                 </div>
-                <button className="mt-3 text-[#00569E] text-sm font-medium">
-                  Detail
-                </button>
               </div>
+
+              {/* Location */}
+              <div className="flex items-center gap-2 mb-6">
+                <MapPin size={16} className="text-gray-400" />
+                <span className="text-gray-600 text-sm">{expert.location}</span>
+              </div>
+
+              {/* Separator */}
+              <div className="border-t border-gray-200 mb-4"></div>
+
+              {/* Detail Button */}
+              <button
+                onClick={() => router.push(`/experts/detail?id=${expert.id}`)}
+                className="w-full text-center"
+              >
+                <span className="text-[#00569E] font-medium text-sm">
+                  Detail
+                </span>
+              </button>
             </div>
-          </Link>
+
+            {index < experts.length - 1 && (
+              <div className="border-t border-gray-200 my-4"></div>
+            )}
+          </div>
         ))}
       </div>
     </div>

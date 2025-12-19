@@ -1,14 +1,20 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useRouter, usePathname } from 'next/navigation';
+import { useState, useEffect } from 'react';
 
 type TabId = 'home' | 'forum' | 'agent-ai' | 'parametres';
 type RoutePath = '/home' | '/forum' | '/agent-ai' | '/parametres';
 
 export default function BottomNavigation() {
   const router = useRouter();
+  const pathname = usePathname();
   const [activeTab, setActiveTab] = useState<TabId>('home');
+
+  useEffect(() => {
+    const currentTab = pathname.split('/')[1] as TabId || 'home';
+    setActiveTab(currentTab);
+  }, [pathname]);
 
   const handleNavigation = (tab: TabId, route: RoutePath) => {
     setActiveTab(tab);

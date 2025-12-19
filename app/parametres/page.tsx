@@ -1,145 +1,161 @@
-'use client';
+"use client";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 
-import { ArrowLeft, Mic, Send } from 'lucide-react';
-import { useRouter } from 'next/navigation';
-import { useState } from 'react';
-
-interface Message {
-  id: number;
-  sender: 'user' | 'ina';
-  text: string;
-  timestamp: string;
-}
-
-export default function ChatPage() {
+const SettingsPage = () => {
   const router = useRouter();
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: 1,
-      sender: 'ina',
-      text: "Bonjour 👋\nJe suis ton compagnon d'écoute.\nTu peux parler librement ici.\nComment tu te sens aujourd'hui ?",
-      timestamp: 'Mar 8:21',
-    },
-    {
-      id: 2,
-      sender: 'user',
-      text: "Franchement je me sens fatigué et un peu perdu.",
-      timestamp: '',
-    },
-    {
-      id: 3,
-      sender: 'ina',
-      text: "Merci de me l'avoir dit.\nQuand tu dis perdu, qu'est-ce qui te traverse le plus en ce moment ?",
-      timestamp: '',
-    },
-    {
-      id: 4,
-      sender: 'user',
-      text: "J'ai beaucoup de pression au travail et je dors mal.",
-      timestamp: '',
-    },
-    {
-      id: 5,
-      sender: 'ina',
-      text: "D'accord.\nCe que tu décris est important et mérite d'être suivi sérieusement.",
-      timestamp: '',
-    },
-  ]);
-  const [inputText, setInputText] = useState('');
-
-  const handleSend = () => {
-    if (inputText.trim()) {
-      setMessages([
-        ...messages,
-        {
-          id: messages.length + 1,
-          sender: 'user',
-          text: inputText,
-          timestamp: '',
-        },
-      ]);
-      setInputText('');
-    }
-  };
+  const [darkMode, setDarkMode] = useState(false);
+  const [notifications, setNotifications] = useState(true);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-yellow-50 via-white to-green-50 flex flex-col">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-200 px-4 py-3 flex items-center gap-3">
-        <button onClick={() => router.back()}>
-          <ArrowLeft size={24} className="text-[#E86C00]" />
-        </button>
-        <div className="flex items-center gap-2">
-          <div className="w-10 h-10 bg-[#E86C00] rounded-full flex items-center justify-center">
-            <span className="text-white font-bold text-sm">INA</span>
-          </div>
-          <div>
-            <p className="font-semibold text-gray-900">INA</p>
-            <p className="text-xs text-[#4CAF50]">● En ligne</p>
+    <div className="min-h-screen bg-linear-to-b from-blue-50 to-gray-100 p-4">
+      <div className="max-w-2xl mx-auto">
+        {/* Header avec bouton retour */}
+        <div className="mb-6">
+          <button
+            onClick={() => router.back()}
+            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+          >
+            <Image
+              src="/arrow-return.svg"
+              alt="Retour"
+              width={24}
+              height={24}
+            />
+          </button>
+        </div>
+
+        <div className="bg-white rounded shadow p-6 mb-6">
+          {/* Options */}
+          <div className="space-y-4">
+            <button className="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 rounded transition-colors">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                  <Image src="/lock.svg" alt="Mot de passe" width={20} height={20} />
+                </div>
+                <div className="text-left">
+                  <h4 className="font-medium text-gray-800">Changer le mot de passe</h4>
+                  <p className="text-gray-500 text-sm">Mettez à jour votre mot de passe régulièrement</p>
+                </div>
+              </div>
+              <Image src="/arrow-return-white.svg" alt="Flèche" width={16} height={16} />
+            </button>
+
+            {/* Add Payment Method */}
+            <button className="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 rounded transition-colors">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
+                  <Image src="/card.svg" alt="Paiement" width={20} height={20} />
+                </div>
+                <div className="text-left">
+                  <h4 className="font-medium text-gray-800">Ajouter un moyen de paiement</h4>
+                  <p className="text-gray-500 text-sm">Ajouter une carte de crédit ou mobile money</p>
+                </div>
+              </div>
+              <Image src="/arrow-return-white.svg" alt="Flèche" width={16} height={16} />
+            </button>
           </div>
         </div>
-        <div className="ml-auto text-xs text-gray-500">Mar 8:21</div>
-      </div>
 
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-4 py-6 space-y-4">
-        {messages.map((message) => (
-          <div
-            key={message.id}
-            className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
-          >
-            {message.sender === 'ina' && (
-              <div className="w-8 h-8 bg-[#E86C00] rounded-full flex items-center justify-center mr-2 flex-shrink-0">
-                <span className="text-white font-bold text-xs">INA</span>
+        {/* Section Push Notifications */}
+        <div className="bg-white rounded shadow p-6 mb-6">
+          <h2 className="text-xl font-semibold text-gray-800 mb-6">Notifications push</h2>
+          
+          <div className="flex items-center justify-between p-4 bg-gray-50 rounded">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center">
+                <Image src="/bell.svg" alt="Notifications" width={20} height={20} />
               </div>
-            )}
-            <div
-              className={`max-w-[70%] px-4 py-3 rounded-2xl whitespace-pre-line ${
-                message.sender === 'user'
-                  ? 'bg-[#00569E] text-white rounded-br-none'
-                  : 'bg-gray-100 text-gray-900 rounded-bl-none'
+              <div>
+                <h4 className="font-medium text-gray-800">Activer les notifications</h4>
+                <p className="text-gray-500 text-sm">Recevoir des mises à jour et rappels</p>
+              </div>
+            </div>
+            <button
+              onClick={() => setNotifications(!notifications)}
+              className={`w-12 h-6 rounded-full transition-colors relative ${
+                notifications ? 'bg-primary-blue' : 'bg-gray-300'
               }`}
             >
-              {message.text}
-            </div>
+              <div
+                className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-transform ${
+                  notifications ? 'right-1' : 'left-1'
+                }`}
+              />
+            </button>
           </div>
-        ))}
+        </div>
 
-        {/* Action Buttons */}
-        <div className="flex gap-2 pt-4">
-          <button className="flex-1 px-4 py-3 bg-[#E86C00] text-white rounded-lg font-medium flex items-center justify-center gap-2">
-            <span>👤</span>
-            Consultez un expert
+        {/* Section Dark Mode */}
+        <div className="bg-white rounded shadow p-6">
+          <h2 className="text-xl font-semibold text-gray-800 mb-6">Mode sombre</h2>
+          
+          <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center">
+                <Image src="/moon.svg" alt="Mode sombre" width={20} height={20} className="invert" />
+              </div>
+              <div>
+                <h4 className="font-medium text-gray-800">Thème sombre</h4>
+                <p className="text-gray-500 text-sm">Passer à l'apparence sombre</p>
+              </div>
+            </div>
+            <button
+              onClick={() => setDarkMode(!darkMode)}
+              className={`w-12 h-6 rounded-full transition-colors relative ${
+                darkMode ? 'bg-primary-blue' : 'bg-gray-300'
+              }`}
+            >
+              <div
+                className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-transform ${
+                  darkMode ? 'right-1' : 'left-1'
+                }`}
+              />
+            </button>
+          </div>
+        </div>
+
+        {/* Additional Settings */}
+        <div className="mt-6 space-y-4">
+          <button className="w-full flex items-center justify-between p-4 bg-primary-light rounded transition-colors">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full flex items-center justify-center">
+                <Image src="/privacy.svg" alt="Confidentialité" width={20} height={20} />
+              </div>
+              <h4 className="font-medium text-white">Confidentialité & Sécurité</h4>
+            </div>
+            <Image src="/arrow-return-white.svg" alt="Flèche" width={16} height={16} />
           </button>
-          <button className="flex-1 px-4 py-3 border-2 border-gray-300 text-gray-700 rounded-lg font-medium flex items-center justify-center gap-2">
-            <span>💬</span>
-            Continuer
+
+          <button className="w-full flex items-center justify-between p-4 bg-primary-light rounded shadow transition-colors">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-primary-light flex items-center justify-center">
+                <Image src="/help.svg" alt="Aide" width={20} height={20} />
+              </div>
+              <h4 className="font-medium text-white">Aide & Support</h4>
+            </div>
+            <Image src="/arrow-return-white.svg" alt="Flèche" width={16} height={16} />
+          </button>
+
+          <button className="w-full flex items-center justify-between p-4 bg-primary-orange rounded shadow transition-colors">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full  flex items-center justify-center">
+                <Image src="/logout.svg" alt="Déconnexion" width={20} height={20} />
+              </div>
+              <h4 className="font-medium text-white ">Déconnexion</h4>
+            </div>
+            <Image src="/arrow-return-white.svg" alt="Flèche" width={16} height={16} />
           </button>
         </div>
-      </div>
 
-      {/* Input */}
-      <div className="bg-white border-t border-gray-200 px-4 py-3">
-        <div className="flex items-center gap-2">
-          <input
-            type="text"
-            value={inputText}
-            onChange={(e) => setInputText(e.target.value)}
-            onKeyPress={(e) => e.key === 'Enter' && handleSend()}
-            placeholder="Message..."
-            className="flex-1 px-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:border-[#00569E]"
-          />
-          <button className="p-3 bg-white border border-gray-300 rounded-full">
-            <Mic size={20} className="text-gray-600" />
-          </button>
-          <button
-            onClick={handleSend}
-            className="p-3 bg-[#E86C00] rounded-full"
-          >
-            <Send size={20} className="text-white" />
-          </button>
+        <div className="mt-8 text-center text-gray-500 text-sm">
+          <p>Version 1.0.0</p>
+          <p className="mt-1">© 2025 INA CI. Tous droits réservés.</p>
         </div>
       </div>
     </div>
   );
-}
+};
+
+export default SettingsPage;

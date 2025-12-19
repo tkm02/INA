@@ -44,6 +44,16 @@ export interface JournalEntry {
   timestamp: string;
 }
 
+export interface DiagnosticResult {
+  id: string;
+  toolId: string;
+  toolName: string;
+  answers: any;
+  score: number;
+  interpretation?: string;
+  timestamp: string;
+}
+
 export interface Resource {
   id: number;
   title: string;
@@ -84,6 +94,7 @@ export interface UserData {
   journals: JournalEntry[];
   journalSettings: JournalSettings;
   resources: Resource[];
+  diagnostics: DiagnosticResult[];
 }
 
 const STORAGE_KEY = 'ina_user_data';
@@ -181,7 +192,8 @@ const getInitialData = (): UserData => ({
       fileUrl: "/video/sante_mental_v2.mp4",
       viewCount: 0
     },
-  ]
+  ],
+  diagnostics: []
 });
 
 export const Storage = {
@@ -340,6 +352,8 @@ export const Storage = {
         recentResources,
         totalViews: data.savedResources.reduce((sum, r) => sum + r.viewCount, 0),
       },
+      diagnostics: data.diagnostics,
+      hasExpert: data.expertsContacted.length > 0 || data.appointments.some(a => a.status === 'confirmed')
     };
   },
 
@@ -413,5 +427,22 @@ export const Storage = {
   exportDataJSON: () => {
     const data = Storage.getData();
     return JSON.stringify(data, null, 2);
+  },
+
+  // Diagnostics
+  addDiagnosticResult: (result: Omit<DiagnosticResult, 'id' | 'timestamp'>) => {
+    const data = Storage.getData();
+    const newResult: DiagnosticResult = {
+      ...result,
+      id: Math.random().toString(36).substr(2, 9),
+      timestamp: new Date().toISOString(),
+    };
+    data.diagnostics.push(newResult);
+    Storage.saveData(data);
+    return newResult;
+  },
+
+  getDiagnostics: () => {
+    return Storage.getData().diagnostics;
   }
 };

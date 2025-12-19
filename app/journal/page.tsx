@@ -50,7 +50,7 @@ export default function JournalListPage() {
       <div className="px-4 mb-6">
         <div className="relative w-full h-48 rounded-2xl overflow-hidden shadow-md">
           <Image 
-            src="/journal-banner.jpg" 
+            src="/journal-banner.png" 
             alt="Journal" 
             fill 
             className="object-cover"

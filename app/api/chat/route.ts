@@ -148,17 +148,37 @@ export async function POST(request: NextRequest) {
     }
     
     if (userContext) {
-      const { moodTrends, viewedResources } = userContext;
+      const { moodTrends, viewedResources, diagnostics, hasExpert } = userContext;
       let contextInfo = '\n\nCONTEXTE UTILISATEUR :';
+      
+      if (hasExpert) {
+        contextInfo += '\n- L\'utilisateur a DÉJÀ un expert assigné (RDV confirmé).';
+      } else {
+        contextInfo += '\n- L\'utilisateur n\'a PAS encore d\'expert.';
+      }
+
       if (moodTrends?.moodCount > 0) {
         contextInfo += `\n- Humeur dominante : ${moodTrends.dominantMood} (${moodTrends.moodCount} entrées)`;
       }
+
+      if (diagnostics && diagnostics.length > 0) {
+        const lastDiag = diagnostics[diagnostics.length - 1];
+        contextInfo += `\n- DERNIER DIAGNOSTIC : ${lastDiag.toolName} (Score: ${lastDiag.score}) terminé le ${lastDiag.timestamp}.`;
+      }
+
       if (viewedResources?.totalViews > 0) {
         contextInfo += `\n- Ressources vues : ${viewedResources.totalViews} (Doc:${viewedResources.types.document}, Audio:${viewedResources.types.audio}, Vidéo:${viewedResources.types.video})`;
         if (viewedResources.recentResources.length > 0) {
           contextInfo += `\n- Récentes : ${viewedResources.recentResources.slice(0, 2).map((r: any) => r.title).join(', ')}`;
         }
       }
+
+      contextInfo += '\n\n🎯 RÈGLE DIAGNOSTIC CRITIQUE :';
+      contextInfo += '\n1. Ne donne JAMAIS de diagnostic ou d\'interprétation de score toi-même.';
+      contextInfo += '\n2. Si l\'utilisateur vient de finir un test (vu dans le contexte) :';
+      contextInfo += '\n   - S\'il a déjà un expert : Dis-lui de patienter le temps que son expert analyse son test et lui fasse un retour.';
+      contextInfo += '\n   - S\'il n\'a PAS d\'expert : Dis-lui de rentrer en contact avec un expert qui pourra analyser son test et le suivre. Propose le bouton [SHOW_ACTIONS].';
+      
       contextInfo += '\n\nAdapte tes recommandations selon ces données.';
       dynamicSystemPrompt += contextInfo;
     }

@@ -8,6 +8,10 @@ export const metadata: Metadata = {
   title: "INA - I'm Not Alone",
   description: "Application de soutien en santé mentale",
   manifest: "/manifest.json",
+  icons: {
+    icon: "/icon-192x192.png",
+    apple: "/icon-192x192.png",
+  },
 };
 
 export const viewport = {

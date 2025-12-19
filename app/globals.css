@@ -6,8 +6,16 @@
 .nextjs-static-indicator-root,
 portal-nextjs-feedback,
 #__next-build-watcher,
-[data-nextjs-dialog-overlay] {
+[data-nextjs-dialog-overlay],
+nextjs-portal,
+[data-nextjs-portal],
+#nextjs-portal,
+.nextjs-portal,
+[class*="nextjs-indicator"],
+[id*="nextjs-indicator"] {
   display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
 }
 
 :root {

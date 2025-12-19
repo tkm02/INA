@@ -42,10 +42,8 @@ export default function HomePage() {
   const handleMoodClick = (idx: number, mood: typeof moodOptions[0]) => {
     setSelectedMood(idx);
     
-    // Persist to LocalStorage
     Storage.addMood(idx, mood.label, mood.emoji);
 
-    // Set toast message
     const messages = [
       "Super ! Continue comme ça ! 🎉",
       "C'est génial de se sentir bien ! 😊",
@@ -55,9 +53,7 @@ export default function HomePage() {
     ];
     setToastMessage(messages[idx]);
 
-    // Celebration effects for "Très bien" and "Bien"
     if (idx === 0 || idx === 1) {
-      // Play celebration sound using Web Audio API
       try {
         const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
         
@@ -79,10 +75,10 @@ export default function HomePage() {
         };
 
         const now = audioContext.currentTime;
-        playNote(523.25, now, 0.4);      // C5
-        playNote(659.25, now + 0.1, 0.4); // E5
-        playNote(783.99, now + 0.2, 0.4); // G5
-        playNote(1046.50, now + 0.3, 0.6); // C6
+        playNote(523.25, now, 0.4);      
+        playNote(659.25, now + 0.1, 0.4); 
+        playNote(783.99, now + 0.2, 0.4); 
+        playNote(1046.50, now + 0.3, 0.6); 
       } catch (e) {
         console.error("Audio error:", e);
       }
@@ -93,7 +89,6 @@ export default function HomePage() {
         startVelocity: 45,
       });
 
-      // Sparkles effect
       setTimeout(() => {
         confetti({
           particleCount: 100,
@@ -272,7 +267,7 @@ export default function HomePage() {
                   <div className="flex flex-col items-center justify-end h-40 w-full">
                     <span className="text-[10px] font-bold text-gray-500 mb-1">{data.count}j</span>
                     <div
-                      className={`${data.color} ${data.height} w-full max-w-[40px] rounded-t-lg shadow-sm transition-all duration-500`}
+                      className={`${data.color} ${data.height} w-full max-w-10 rounded-t-lg shadow-sm transition-all duration-500`}
                     ></div>
                   </div>
                   <span className="text-[9px] text-gray-500 font-bold uppercase text-center leading-tight h-6 flex items-center">
@@ -319,7 +314,7 @@ export default function HomePage() {
       {/* Toast Notification */}
       {toastMessage && (
         <div className="fixed bottom-24 left-1/2 transform -translate-x-1/2 z-50 animate-slide-up px-4 w-full max-w-md">
-          <div className="bg-gradient-to-r from-[#E86C00] to-[#FF8C42] text-white px-4 sm:px-6 py-3 sm:py-4 rounded-full shadow-2xl flex items-center justify-center gap-2 sm:gap-3 border-2 border-white">
+          <div className="bg-linear-to-r from-[#E86C00] to-[#FF8C42] text-white px-4 sm:px-6 py-3 sm:py-4 rounded-full shadow-2xl flex items-center justify-center gap-2 sm:gap-3 border-2 border-white">
             <span className="text-xl sm:text-2xl">✨</span>
             <span className="font-medium text-xs sm:text-sm text-center">{toastMessage}</span>
             <span className="text-xl sm:text-2xl">✨</span>
@@ -331,3 +326,7 @@ export default function HomePage() {
     </div>
   );
 }
+function fire(arg0: number, arg1: { spread: number; startVelocity: number; }) {
+  throw new Error("Function not implemented.");
+}
+

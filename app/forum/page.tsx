@@ -64,7 +64,7 @@ export default function ChatPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-yellow-50 via-white to-green-50 flex flex-col">
+    <div className="min-h-screen bg-linear-to-b from-yellow-50 via-white to-green-50 flex flex-col">
       {/* Header */}
       <div className="bg-white border-b border-gray-200 px-4 py-3 flex items-center gap-3">
         <button onClick={() => router.back()}>
@@ -90,7 +90,7 @@ export default function ChatPage() {
             className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
           >
             {message.sender === 'ina' && (
-              <div className="w-8 h-8 bg-[#E86C00] rounded-full flex items-center justify-center mr-2 flex-shrink-0">
+              <div className="w-8 h-8 bg-[#E86C00] rounded-full flex items-center justify-center mr-2 shrink-0">
                 <span className="text-white font-bold text-xs">INA</span>
               </div>
             )}

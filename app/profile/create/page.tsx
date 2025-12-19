@@ -65,7 +65,6 @@ export default function ProfileCreatePage() {
       className="min-h-screen flex flex-col items-center justify-between p-6"
       style={{ backgroundColor: '#00569E' }} // Style inline pour le bleu
     >
-      {/* Header */}
       <div className="w-full pt-4 max-w-md mb-8">
         {step !== "basic" && (
           <motion.button

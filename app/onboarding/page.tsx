@@ -81,14 +81,13 @@ export default function OnboardingPWA() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [direction, setDirection] = useState(0);
   const slide = slides[currentSlide];
-  const router = useRouter(); // Initialisation du router
+  const router = useRouter(); 
 
   const handleNext = () => {
     if (currentSlide < slides.length - 1) {
       setDirection(1);
       setCurrentSlide(currentSlide + 1);
     } else {
-      // Redirection vers /profile/create sur le dernier slide
       router.push("/profile/create");
     }
   };

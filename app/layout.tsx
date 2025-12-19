@@ -8,8 +8,13 @@ export const metadata: Metadata = {
   title: "INA - I'm Not Alone",
   description: "Application de soutien en santé mentale",
   manifest: "/manifest.json",
+};
+
+export const viewport = {
   themeColor: "#00569E",
-  viewport: "width=device-width, initial-scale=1, maximum-scale=1",
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
 };
 
 const lexendDeca = Lexend_Deca({
@@ -38,6 +43,7 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
         <link rel="manifest" href="/manifest.json" />
+        <link rel="icon" href="/icon-192x192.png" />
         <meta name="theme-color" content="#00569E" />
       </head>
       <body className="antialiased">

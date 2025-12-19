@@ -14,9 +14,26 @@ export default function CreateJournalPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleImageUpload = () => {
-    // Simulation of image upload (adding a placeholder image)
-    const newImage = `/journal-image-${images.length + 1}.jpg`;
-    setImages([...images, newImage]);
+    document.getElementById('journal-image-input')?.click();
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    Array.from(files).forEach(file => {
+      if (file.size > 10 * 1024 * 1024) {
+        alert("L'image est trop volumineuse (max 10MB)");
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = reader.result as string;
+        setImages(prev => [...prev, base64String]);
+      };
+      reader.readAsDataURL(file);
+    });
   };
 
   const removeImage = (index: number) => {
@@ -29,8 +46,7 @@ export default function CreateJournalPage() {
 
     setIsSubmitting(true);
     
-    // In a real app, 'content' would be the full entry, 
-    // but here description seems to be the main content field in the UI
+    // Save to storage
     Storage.addJournal({
       title,
       description,
@@ -67,6 +83,14 @@ export default function CreateJournalPage() {
 
       {/* Form */}
       <form onSubmit={handleSubmit} className="px-6 space-y-8">
+        <input 
+          type="file" 
+          id="journal-image-input" 
+          className="hidden" 
+          accept="image/*"
+          multiple
+          onChange={handleFileChange}
+        />
         <div>
           <label className="block text-gray-800 font-bold text-lg mb-2">Titre</label>
           <input
@@ -102,9 +126,9 @@ export default function CreateJournalPage() {
             <div className="bg-gray-100 p-3 rounded-xl group-hover:bg-[#FFF5EB] transition-colors">
               <Upload className="text-gray-500 group-hover:text-[#E86C00]" size={24} />
             </div>
-            <p className="text-gray-500 font-medium text-sm">Ajouter des images(optionnelles )</p>
+            <p className="text-gray-500 font-medium text-sm">Ajouter des images (optionnelles)</p>
           </div>
-          <p className="text-[10px] text-gray-400 mt-2 ml-1">Attach file. File size of your documents should not exceed 10MB</p>
+          <p className="text-[10px] text-gray-400 mt-2 ml-1">Taille maximale par image : 10Mo</p>
         </div>
 
         {/* Selected Images Preview */}
@@ -112,11 +136,11 @@ export default function CreateJournalPage() {
           <div className="flex flex-wrap gap-4 pt-2">
             {images.map((img, idx) => (
               <div key={idx} className="relative w-24 h-24 rounded-xl overflow-hidden shadow-md group">
-                <Image src={img} alt="preview" fill className="object-cover" />
+                <img src={img} alt="preview" className="w-full h-full object-cover" />
                 <button 
                   type="button"
                   onClick={() => removeImage(idx)}
-                  className="absolute top-1 right-1 bg-black/50 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                  className="absolute top-1 right-1 bg-black/50 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
                 >
                   <X size={12} />
                 </button>
@@ -140,3 +164,4 @@ export default function CreateJournalPage() {
     </div>
   );
 }
+

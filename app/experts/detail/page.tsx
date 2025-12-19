@@ -112,7 +112,7 @@ const experts = [
   },
 ];
 
-export default function ExpertDetailPage() {
+function ExpertDetailContent() {
   const { theme } = useTheme();
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -288,5 +288,19 @@ export default function ExpertDetailPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+import { Suspense } from "react";
+
+export default function ExpertDetailPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <div className="w-8 h-8 border-4 border-primary-blue border-t-transparent rounded-full animate-spin" />
+      </div>
+    }>
+      <ExpertDetailContent />
+    </Suspense>
   );
 }

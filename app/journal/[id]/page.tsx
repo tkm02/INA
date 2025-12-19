@@ -154,11 +154,10 @@ export default function JournalDetailPage() {
             <div className="grid grid-cols-2 gap-4">
               {journal.images.map((img, idx) => (
                 <div key={idx} className="relative aspect-square rounded-2xl overflow-hidden shadow-md border-2 border-gray-50">
-                  <Image 
+                  <img 
                     src={img} 
                     alt={`Journal image ${idx + 1}`} 
-                    fill 
-                    className="object-cover transition-transform hover:scale-105" 
+                    className="w-full h-full object-cover transition-transform hover:scale-105" 
                   />
                 </div>
               ))}

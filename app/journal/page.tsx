@@ -30,7 +30,6 @@ export default function JournalListPage() {
 
   return (
     <div className="min-h-screen bg-[#FFFFF0] pb-24">
-      {/* Header */}
       <div className="px-4 py-4 flex items-center justify-between">
         <button onClick={() => router.back()} className="p-1">
           <Image src="/arrow-return.svg" alt="Retour" width={24} height={24} />
@@ -125,7 +124,7 @@ export default function JournalListPage() {
       </div>
 
       {/* Floating Action Button */}
-      <div className="fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-[#FFFFF0] via-[#FFFFF0]/80 to-transparent">
+      <div className="fixed bottom-0 left-0 right-0 p-4 bg-linear-to-t from-[#FFFFF0] via-[#FFFFF0]/80 to-transparent">
         <button
           id="add-journal-btn"
           onClick={() => router.push('/journal/create')}

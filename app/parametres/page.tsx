@@ -1,6 +1,5 @@
 "use client";
 
-import { Storage } from "@/lib/storage";
 import { useTheme } from "@/lib/theme-context";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -12,9 +11,6 @@ const SettingsPage = () => {
   const [notifications, setNotifications] = useState(true);
 
   const handleLogout = () => {
-    const data = Storage.getData();
-    data.profile = null;
-    Storage.saveData(data);
     router.push("/auth/login");
   };
 

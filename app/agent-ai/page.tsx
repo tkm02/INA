@@ -18,14 +18,20 @@ interface Message {
     title: string;
     type: string;
   };
+  showQuiz?: boolean;
 }
 
-// Nettoyage affichage (Markdown)
+// Nettoyage affichage (Markdown + citations)
 const cleanDisplayText = (text: string) => {
-  return text.replace(/\*\*/g, '').replace(/__/g, '');
+  return text
+    .replace(/\*\*/g, '')
+    .replace(/__/g, '')
+    .replace(/\[\d+\]/g, '') // Supprime [1], [2], etc.
+    .replace(/\[\d+(?:,\s*\d+)*\]/g, '') // Supprime [1, 2], etc.
+    .trim();
 };
 
-// Nettoyage TTS (Markdown + emojis)
+// Nettoyage TTS (Markdown + emojis + tags)
 const cleanSpeechText = (text: string) => {
   return text
     .replace(/\*\*/g, '')
@@ -319,6 +325,12 @@ export default function AgentAIPage() {
         assistantText = assistantText.replace(resourceMatch[0], '').trim();
       }
 
+      let showQuiz = false;
+      if (assistantText.includes('[SHOW_QUIZ]')) {
+        showQuiz = true;
+        assistantText = assistantText.replace('[SHOW_QUIZ]', '').trim();
+      }
+
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
@@ -326,6 +338,7 @@ export default function AgentAIPage() {
         showActionButtons: showActions,
         customOptions: options,
         recommendation,
+        showQuiz,
       };
 
       setMessages((prev) => [...prev, assistantMessage]);
@@ -457,6 +470,27 @@ export default function AgentAIPage() {
                     className="px-4 py-2 bg-white border border-[#E86C00] text-[#E86C00] rounded-full font-medium hover:bg-[#E86C00] hover:text-white transition-all shadow-sm text-sm"
                   >
                     {option}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {message.showQuiz && (
+              <div className="flex flex-wrap gap-3 mt-3 ml-10 max-w-[90%] animate-in fade-in slide-in-from-top-2 duration-500">
+                {[1, 2, 3, 4, 5].map((val) => (
+                  <button
+                    key={val}
+                    onClick={() => {
+                      setMessages((prev) =>
+                        prev.map((m) =>
+                          m.id === message.id ? { ...m, showQuiz: false } : m
+                        )
+                      );
+                      sendMessage(val.toString());
+                    }}
+                    className="w-10 h-10 flex items-center justify-center bg-white border-2 border-[#E86C00] text-[#E86C00] rounded-xl font-bold hover:bg-[#E86C00] hover:text-white transition-all shadow-sm"
+                  >
+                    {val}
                   </button>
                 ))}
               </div>

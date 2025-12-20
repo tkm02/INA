@@ -35,7 +35,7 @@ export default function LoginPage() {
     
     setTimeout(() => {
       const savedPin = data.profile?.pin;
-      if (savedPin === finalPin || (!savedPin && finalPin === "1234")) {
+      if (savedPin === finalPin) {
         setIsLoading(false);
         router.push("/home");
       } else {

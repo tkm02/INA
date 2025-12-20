@@ -1,11 +1,11 @@
 "use client";
 
-import React, { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Star, Play } from "lucide-react";
-import { useParams, useRouter } from "next/navigation";
-import { Forum } from "../page";
+import { AnimatePresence, motion } from "framer-motion";
+import { Play, Star } from "lucide-react";
 import Image from "next/image";
+import { useParams, useRouter } from "next/navigation";
+import { useState } from "react";
+import { Forum } from "../page";
 
 const ForumDetailPage = () => {
   const [activeTab, setActiveTab] = useState("description");
@@ -117,20 +117,18 @@ const ForumDetailPage = () => {
             className="w-full h-full object-cover"
           />
           <div className="absolute inset-0 bg-linear-to-t from-black/70 to-transparent" />
-          <motion.div
+          <motion.button
             whileTap={{ scale: 0.95 }}
-            className="absolute top-6 left-6 text-orange-500 cursor-pointer"
-            onClick={() => router.back()}
+            className="absolute top-6 left-6 p-2 bg-white/20 backdrop-blur-md rounded-full text-orange-500 cursor-pointer"
+            onClick={() => router.push("/forum")}
           >
-            <div>
-              <Image
-                src="/arrow-left.svg"
-                alt="Retour"
-                width={24}
-                height={24}
-              />
-            </div>
-          </motion.div>
+            <Image
+              src="/arrow-return.svg"
+              alt="Retour"
+              width={24}
+              height={24}
+            />
+          </motion.button>
           <div className="absolute bottom-6 left-6 right-6">
             <h1 className="text-white text-4xl font-bold mb-2">
               {forum?.name}

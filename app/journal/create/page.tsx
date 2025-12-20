@@ -64,7 +64,7 @@ export default function CreateJournalPage() {
     <div className="min-h-screen bg-[#FFFFF0] pb-10">
       {/* Header */}
       <div className="px-4 py-4">
-        <button onClick={() => router.back()} className="p-1">
+        <button onClick={() => router.push("/journal")} className="p-2 rounded-full hover:bg-gray-100 transition-colors cursor-pointer">
           <Image src="/arrow-return.svg" alt="Retour" width={24} height={24} />
         </button>
       </div>

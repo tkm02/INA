@@ -180,7 +180,7 @@ export default function ExpertChatPage({ params }: { params: Promise<{ expertId:
       {/* Header */}
       <div className="bg-white p-4 border-b border-gray-100 flex items-center justify-between sticky top-0 z-10 shadow-sm">
         <div className="flex items-center gap-3">
-          <button onClick={() => router.back()} className="p-2 bg-gray-50 rounded-full active:scale-95 transition-all">
+          <button onClick={() => router.push("/experts")} className="p-2 bg-gray-50 rounded-full active:scale-95 transition-all cursor-pointer">
              <Image src="/arrow-return.svg" width={20} height={20} alt="Retour" />
           </button>
           <div className="flex items-center gap-3">

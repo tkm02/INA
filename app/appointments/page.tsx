@@ -1,7 +1,7 @@
 "use client";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import React, { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 
 const AppointmentsPage = () => {
   const router = useRouter();
@@ -185,7 +185,7 @@ const AppointmentsPage = () => {
       )}
 */}
       <div className="p-6 md:p-8">
-        <button onClick={() => router.back()} className="p-1 mb-4">
+        <button onClick={() => router.push("/home")} className="p-2 rounded-full hover:bg-gray-100 transition-colors cursor-pointer mb-4">
           <Image src="/arrow-return.svg" alt="Retour" width={24} height={24} />
         </button>
 

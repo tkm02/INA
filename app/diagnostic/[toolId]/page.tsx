@@ -2,7 +2,8 @@
 
 import { QUIZZES, SCALE_OPTIONS } from "@/lib/quizzes";
 import { Storage } from "@/lib/storage";
-import { CheckCircle2, ChevronLeft, Loader2 } from "lucide-react";
+import { CheckCircle2, Loader2 } from "lucide-react";
+import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -175,8 +176,8 @@ export default function QuizPage() {
     <div className="min-h-screen bg-white flex flex-col">
       {/* Header */}
       <div className="px-4 py-6 flex items-center gap-4">
-        <button onClick={() => router.back()} className="p-2">
-            <ChevronLeft size={24} className="text-gray-900" />
+        <button onClick={() => router.push("/diagnostic")} className="p-2 rounded-full hover:bg-gray-100 transition-colors cursor-pointer">
+            <Image src="/arrow-return.svg" alt="Retour" width={24} height={24} />
         </button>
         <div className="flex-1">
             <div className="h-2 w-full bg-gray-100 rounded-full overflow-hidden">

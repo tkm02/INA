@@ -78,9 +78,9 @@ export default function ExpertsPage() {
       theme === 'dark' ? 'bg-gray-900' : 'bg-white'
     }`}>
       <div className="px-4 py-4 mt-1.5 flex items-center justify-between">
-       <button onClick={() => router.back()} className={`p-2 rounded-full ${theme === 'dark' ? 'hover:bg-gray-800' : 'hover:bg-gray-100'}`}>
-         <Image src="/arrow-return.svg" alt="retour" width={25} height={25} className={theme === 'dark' ? 'invert' : ''}/>
-       </button>
+        <button onClick={() => router.push("/home")} className={`p-2 rounded-full cursor-pointer ${theme === 'dark' ? 'hover:bg-gray-800' : 'hover:bg-gray-100'}`}>
+          <Image src="/arrow-return.svg" alt="retour" width={25} height={25} className={theme === 'dark' ? 'invert' : ''}/>
+        </button>
        <h1 className={`text-xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>Experts</h1>
        <div className="w-10" />
       </div>

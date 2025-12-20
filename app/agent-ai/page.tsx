@@ -345,7 +345,7 @@ export default function AgentAIPage() {
 
   const handleBack = () => {
     if (typeof window !== 'undefined') window.speechSynthesis.cancel();
-    router.back();
+    router.push('/home');
   };
 
   return (

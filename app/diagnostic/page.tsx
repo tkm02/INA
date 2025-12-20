@@ -57,7 +57,7 @@ export default function DiagnosticPage() {
     <div className="min-h-screen bg-white flex flex-col items-center">
       {/* Header */}
       <div className="w-full px-4 py-6 flex items-center justify-between">
-        <button onClick={() => router.back()} className="p-2">
+        <button onClick={() => router.push("/home")} className="p-2 rounded-full hover:bg-gray-100 transition-colors cursor-pointer">
             <Image src="/arrow-return.svg" alt="Retour" width={24} height={24} className="rotate-0" />
         </button>
         <h1 className="text-[#00569E] font-medium">Diagnostic</h1>

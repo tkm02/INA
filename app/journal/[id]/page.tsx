@@ -69,7 +69,7 @@ export default function JournalDetailPage() {
     <div className="min-h-screen bg-white">
       {/* Header */}
       <div className="px-4 py-4 flex items-center justify-between sticky top-0 bg-white z-10">
-        <button onClick={() => router.back()} className="p-1">
+        <button onClick={() => router.push("/journal")} className="p-2 rounded-full hover:bg-gray-100 transition-colors cursor-pointer">
           <Image src="/arrow-return.svg" alt="Retour" width={24} height={24} />
         </button>
         <div className="flex items-center gap-4">

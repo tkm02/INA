@@ -134,8 +134,8 @@ const RessourceDetailPage = ({ params }: RessourceDetailPageProps) => {
       <div className="min-h-screen flex flex-col items-center justify-center bg-white p-4">
         <h1 className="text-2xl font-bold text-gray-900 mb-2">Ressource non trouvée</h1>
         <button 
-          onClick={() => router.back()}
-          className="text-primary-orange font-semibold hover:underline"
+          onClick={() => router.push("/resources")}
+          className="text-primary-orange font-semibold hover:underline cursor-pointer"
         >
           Retourner aux ressources
         </button>
@@ -150,8 +150,8 @@ const RessourceDetailPage = ({ params }: RessourceDetailPageProps) => {
       {/* Header */}
       <header className="bg-white px-4 py-4 border-b flex items-center gap-4 sticky top-0 z-10">
         <button 
-          onClick={() => router.back()}
-          className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+          onClick={() => router.push("/resources")}
+          className="p-2 hover:bg-gray-100 rounded-full transition-colors cursor-pointer"
         >
           <img src="/arrow-return.svg" alt="Retour" width="24" height="24" />
         </button>

@@ -1,12 +1,12 @@
 "use client";
 
-import React, { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Heart, MessageCircle, Share2, Star } from "lucide-react";
+import BottomNavigation from "@/components/ui/BottomNav";
 import Search from "@/components/ui/Search";
+import { AnimatePresence, motion } from "framer-motion";
+import { Heart, MessageCircle, Share2, Star } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import BottomNavigation from "@/components/ui/BottomNav";
+import { useState } from "react";
 
 export interface Forum {
   id: number;
@@ -153,20 +153,17 @@ function ForumPage() {
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
       <div className="max-w-2xl mx-auto p-4">
-        <motion.div
-          whileTap={{ scale: 0.95 }}
-          className="mb-6 p-1 cursor-pointer"
-          onClick={() => router.back()}
+        <button
+          className="mb-6 p-2 rounded-full hover:bg-gray-200 transition-colors cursor-pointer"
+          onClick={() => router.push("/home")}
         >
-          <div>
-            <Image
-              src="/arrow-return.svg"
-              alt="Retour"
-              width={24}
-              height={24}
-            />
-          </div>
-        </motion.div>
+          <Image
+            src="/arrow-return.svg"
+            alt="Retour"
+            width={24}
+            height={24}
+          />
+        </button>
 
         <div className="mb-6">
           <Search />

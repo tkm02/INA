@@ -199,8 +199,8 @@ const RessourcesPage = () => {
       <div className="max-w-4xl mx-auto">
         <header className="mb-8 md:mb-10">
           <button 
-            className="text-white hover:opacity-80 mt-2.5 transition-opacity mb-6"
-            onClick={() => router.back()}
+            className="text-white hover:opacity-80 mt-2.5 transition-opacity mb-6 cursor-pointer"
+            onClick={() => router.push("/home")}
           >
             <img src="/arrow-return.svg" alt="Retour" width="28" height="28" />
           </button>

@@ -27,7 +27,7 @@ const SettingsPage = () => {
         <div className={`p-6 flex items-center gap-4 border-b ${
           theme === 'dark' ? 'bg-gray-900 border-gray-800' : 'bg-white border-gray-100'
         }`}>
-          <button onClick={() => router.back()} className="p-1">
+          <button onClick={() => router.push("/home")} className="p-2 rounded-full hover:bg-gray-100 transition-colors cursor-pointer">
                <Image src="/arrow-return.svg" alt="Retour" width={24} height={24} className={theme === 'dark' ? 'invert' : ''} />
           </button>
           <h1 className={`text-xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>Paramètres</h1>

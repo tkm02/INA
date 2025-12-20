@@ -1,22 +1,21 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import {
-  Calendar,
-  Clock,
-  User,
-  Shield,
-  Video,
-  Phone,
-  CheckCircle,
-  Download,
-  Share2,
-  Printer,
   ArrowRight,
-  Banknote,
+  Calendar,
+  CheckCircle,
+  Clock,
+  Download,
+  Phone,
+  Printer,
+  Share2,
+  Shield,
+  User,
+  Video
 } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 export default function RecapPage() {
   const [isConfirmed, setIsConfirmed] = useState(false);
@@ -385,7 +384,12 @@ export default function RecapPage() {
 
       <div className="max-w-4xl mx-auto">
         <div className="px-4 py-4 mt-1.5">
-          <Image src={"/arrow-return.svg"} alt="retour" width={25} height={25} />
+          <button 
+            onClick={() => router.push("/experts")}
+            className="p-2 rounded-full hover:bg-gray-100 transition-colors cursor-pointer"
+          >
+            <Image src="/arrow-return.svg" alt="retour" width={25} height={25} />
+          </button>
         </div>
         <header className="mb-8 px-4">
           <h1 className="text-xl md:text-4xl font-bold text-gray-800 mb-2">

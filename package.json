@@ -14,6 +14,7 @@
     "@ai-sdk/openai-compatible": "^2.0.51",
     "@ai-sdk/perplexity": "^2.0.22",
     "@nanostores/react": "github:ai/react",
+    "@supabase/supabase-js": "^2.108.2",
     "ai": "^6.0.207",
     "canvas-confetti": "^1.9.4",
     "framer-motion": "^12.23.26",

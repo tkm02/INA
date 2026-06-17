@@ -1,4 +1,4 @@
-import { createPerplexity } from '@ai-sdk/perplexity';
+import { deepseek } from '@ai-sdk/deepseek';
 import { generateText } from 'ai';
 import { NextRequest } from 'next/server';
 
@@ -139,8 +139,7 @@ export async function POST(request: NextRequest) {
       return new Response('Messages invalides', { status: 400 });
     }
 
-    const perplexityKey = process.env.PERPLEXITY_API_KEY || 'votre-cle-api';
-    const perplexityProvider = createPerplexity({ apiKey: perplexityKey });
+    const deepseekKey = process.env.DEEPSEEK_API_KEY || 'votre-cle-api';
 
     let dynamicSystemPrompt = INA_SYSTEM_PROMPT;
     if (journalContext) {
@@ -234,11 +233,11 @@ export async function POST(request: NextRequest) {
     });
 
     const { text } = await generateText({
-      model: perplexityProvider('sonar-pro'),
+      model: deepseek('deepseek-chat'),
       system: dynamicSystemPrompt,
       messages: sanitizedHistory,
       temperature: 0.7,
-    }); 
+    });
 
     return Response.json({ 
       message: text,

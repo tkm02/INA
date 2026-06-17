@@ -198,7 +198,6 @@ export default function ProfileCreatePage() {
                     <option value="" disabled>Sélectionner</option>
                     <option value="Masculin" className="text-gray-900 bg-white">Masculin</option>
                     <option value="Féminin" className="text-gray-900 bg-white">Féminin</option>
-                    <option value="Autre" className="text-gray-900 bg-white">Autre</option>
                   </select>
                   <div className="absolute right-0 top-1/2 -translate-y-1/2 pointer-events-none">
                     <svg width="20" height="20" viewBox="0 0 20 20" fill="none">

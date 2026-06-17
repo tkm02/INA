@@ -9,9 +9,12 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@ai-sdk/deepseek": "^2.0.39",
+    "@ai-sdk/openai": "^3.0.72",
+    "@ai-sdk/openai-compatible": "^2.0.51",
     "@ai-sdk/perplexity": "^2.0.22",
     "@nanostores/react": "github:ai/react",
-    "ai": "^5.0.115",
+    "ai": "^6.0.207",
     "canvas-confetti": "^1.9.4",
     "framer-motion": "^12.23.26",
     "lucide-react": "^0.562.0",
